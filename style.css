@@ -1,0 +1,262 @@
+/* Estilos Gerais */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    margin: 0;
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+header {
+    background-color: #f4f4f4;
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.header-logo {
+    max-width: 170px; /* Define a largura máxima da logo */
+    height: auto; /* Mantém a proporção da imagem */
+    margin-bottom: 10px; /* Espaçamento abaixo da logo */
+}
+
+h1 {
+    color: #d9534f; /* Vermelho temático */
+    margin: 0;
+}
+
+main {
+    padding: 20px;
+}
+
+/* Seção do Cardápio */
+#menu-categorias {
+    flex-basis: 65%;
+}
+
+h2 {
+    color: #333;
+    border-bottom: 2px solid #d9534f;
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+.categoria-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.menu-item {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.item-image {
+    width: 100%; /* Garante que a imagem ocupe a largura total do item */
+    height: 150px; /* Altura fixa para padronizar */
+    object-fit: cover; /* Corta a imagem para preencher o espaço sem distorcer */
+    border-radius: 4px; /* Bordas arredondadas para a imagem */
+    margin-bottom: 15px;
+}
+
+.menu-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.menu-item h4 {
+    margin: 0 0 10px 0;
+    color: #d9534f;
+}
+
+.item-descricao {
+    font-size: 0.9em;
+    color: #666;
+    flex-grow: 1;
+    margin-bottom: 15px;
+}
+
+.item-preco {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.add-carrinho-btn {
+    background-color: #5cb85c; /* Verde */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1em;
+    transition: background-color 0.2s;
+}
+
+.add-carrinho-btn:hover {
+    background-color: #4cae4c;
+}
+
+/* Seção do Carrinho */
+aside#carrinho {
+    flex-basis: 30%;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    align-self: flex-start; /* Para não esticar */
+}
+
+.forma-pagamento {
+    margin-bottom: 22px; /* Adiciona um espaçamento de 22px abaixo da div */
+}
+
+#carrinho h2 {
+    margin-top: 0;
+    border-bottom-color: #5bc0de; /* Azul */
+}
+
+#carrinho-itens {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+}
+
+#carrinho-itens li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center; /* Alinha verticalmente */
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.item-info {
+    display: flex;
+    flex-direction: column; /* Empilha nome e preço */
+    flex-grow: 1;
+}
+
+.remover-item-btn {
+    background-color: #f0ad4e; /* Laranja */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    margin-left: 10px; /* Espaço entre o item e o botão */
+    transition: background-color 0.2s;
+}
+
+.remover-item-btn:hover {
+    background-color: #ec971f;
+}
+
+#carrinho-itens li:last-child {
+    border-bottom: none;
+}
+
+#carrinho p {
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: right;
+}
+
+#finalizar-pedido {
+    background-color: #d9534f; /* Vermelho */
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1.1em;
+    transition: background-color 0.2s;
+}
+
+#finalizar-pedido:hover {
+    background-color: #c9302c;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    main {
+        flex-direction: column;
+    }
+
+    #menu-categorias,
+    aside#carrinho {
+        flex-basis: 100%;
+    }
+
+    aside#carrinho {
+        margin-top: 20px;
+    }
+}
+
+/* Estilos da Central de Pedidos */
+#lista-pedidos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    width: 100%;
+}
+
+@media (min-width: 992px) { /* Para telas maiores que 992px */
+    #lista-pedidos {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+.pedido-card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-left: 5px solid #5bc0de; /* Borda azul para novos pedidos */
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.pedido-card h3 {
+    margin-top: 0;
+}
+
+.pedido-card ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.total-pedido {
+    font-weight: bold;
+    text-align: right;
+    font-size: 1.1em;
+    margin-top: 15px;
+}
+
+.concluir-btn {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1em;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+}
+
+.concluir-btn:hover {
+    background-color: #4cae4c;
+}

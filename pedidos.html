@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central de Pedidos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="audio-permission-message" style="text-align: center; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; cursor: pointer;">
+        Clique aqui para ativar os alertas sonoros de novos pedidos.
+    </div>
+
+    <header>
+        <h1>Novos Pedidos</h1>
+    </header>
+
+    <main id="lista-pedidos">
+        <!-- Os novos pedidos aparecerão aqui em tempo real -->
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="central.js"></script>
+    <audio id="notificationSound" src="notification.mp3" preload="auto"></audio>
+</body>
+</html>

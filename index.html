@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cardápio Digital</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <img src="Design sem nome.png" alt="Logo do Cardápio" class="header-logo">
+    </header>
+
+    <main>
+        <section id="menu-categorias">
+            <!-- As categorias e itens do cardápio serão inseridos aqui pelo JavaScript -->
+        </section>
+
+        <aside id="carrinho">
+            <h2>Meus Pedidos</h2>
+            <ul id="carrinho-itens">
+                <!-- Itens do carrinho aparecerão aqui -->
+            </ul>
+            <p>Total: <span id="carrinho-total">R$ 0,00</span></p>
+
+            <div class="forma-pagamento">
+                <h3>Forma de Pagamento:</h3>
+                <label><input type="radio" name="pagamento" value="pix" checked> Pix</label><br>
+                <label><input type="radio" name="pagamento" value="cartao"> Cartão de Crédito/Débito</label><br>
+                <label><input type="radio" name="pagamento" value="dinheiro"> Dinheiro</label>
+            </div>
+
+            <button id="finalizar-pedido">Finalizar Pedido</button>
+
+            
+        </aside>
+    </main>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
+    <script src="cardapio.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
