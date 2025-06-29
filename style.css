@@ -260,3 +260,11 @@ aside#carrinho {
 .concluir-btn:hover {
     background-color: #c9302c;
 }
+
+.gerar-pdf-btn {
+    background-color: #5cb85c; /* Verde */
+}
+
+.gerar-pdf-btn:hover {
+    background-color: #4cae4c; /* Verde mais escuro no hover */
+}
