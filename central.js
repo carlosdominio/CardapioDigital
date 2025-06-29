@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}
             <ul>${itensHtml}</ul>
             <p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p>
-            <button class="concluir-btn">Marcar como Concluído</button>
+            <button class="concluir-btn">Fechar Conta</button>
             <button class="concluir-btn gerar-pdf-btn">Gerar Comprovante</button>
         `;
 

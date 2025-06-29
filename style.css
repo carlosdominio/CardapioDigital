@@ -245,7 +245,7 @@ aside#carrinho {
 }
 
 .concluir-btn {
-    background-color: #5cb85c;
+    background-color: #d9534f;
     color: white;
     border: none;
     padding: 10px 15px;
@@ -258,5 +258,5 @@ aside#carrinho {
 }
 
 .concluir-btn:hover {
-    background-color: #4cae4c;
+    background-color: #c9302c;
 }
