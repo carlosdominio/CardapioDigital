@@ -2,42 +2,119 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializa o Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
+    const auth = firebase.auth();
     const pedidosRef = database.ref('pedidos');
+
+    const loginContainer = document.getElementById('login-container');
+    const appContent = document.getElementById('app-content');
+    const loginEmailInput = document.getElementById('login-email');
+    const loginPasswordInput = document.getElementById('login-password');
+    const loginBtn = document.getElementById('login-btn');
+    const logoutBtn = document.getElementById('logout-btn');
+    const loginErrorMessage = document.getElementById('login-error-message');
 
     const listaPedidosContainer = document.getElementById('lista-pedidos');
     const audioPermissionMessage = document.getElementById('audio-permission-message');
     const notificationSound = document.getElementById('notificationSound');
 
-    // Adiciona um listener para o clique na mensagem de permissão de áudio
-    if (audioPermissionMessage && notificationSound) {
-        audioPermissionMessage.addEventListener('click', () => {
-            notificationSound.play().then(() => {
-                // Se o som tocar, oculta a mensagem
-                audioPermissionMessage.style.display = 'none';
-            }).catch(e => {
-                console.error("Erro ao tentar tocar o som na interação inicial:", e);
-                // Se houver erro (ex: som ainda bloqueado), pode-se manter a mensagem ou dar feedback
-            });
-        });
+    // Função para exibir/ocultar conteúdo com base no estado de autenticação
+    function toggleContent(loggedIn) {
+        if (loggedIn) {
+            loginContainer.style.display = 'none';
+            appContent.style.display = 'block';
+        } else {
+            loginContainer.style.display = 'block';
+            appContent.style.display = 'none';
+        }
     }
 
-    // Ouve por novos pedidos adicionados
-    pedidosRef.on('child_added', (snapshot) => {
-        const pedido = snapshot.val();
-        const pedidoId = snapshot.key;
-        renderizarPedido(pedido, pedidoId);
+    // Listener para o estado de autenticação
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // Usuário logado
+            toggleContent(true);
+            // Adiciona um listener para o clique na mensagem de permissão de áudio
+            if (audioPermissionMessage && notificationSound) {
+                audioPermissionMessage.addEventListener('click', () => {
+                    notificationSound.play().then(() => {
+                        // Se o som tocar, oculta a mensagem
+                        audioPermissionMessage.style.display = 'none';
+                    }).catch(e => {
+                        console.error("Erro ao tentar tocar o som na interação inicial:", e);
+                    });
+                });
+            }
+
+            // Ouve por novos pedidos adicionados
+            pedidosRef.on('child_added', (snapshot) => {
+                const pedido = snapshot.val();
+                const pedidoId = snapshot.key;
+                renderizarPedido(pedido, pedidoId);
+            });
+
+            // Ouve por pedidos atualizados
+            pedidosRef.on('child_changed', (snapshot) => {
+                const pedido = snapshot.val();
+                const pedidoId = snapshot.key;
+                const existingPedidoDiv = document.getElementById(pedidoId);
+                if (existingPedidoDiv) {
+                    // Remove o pedido antigo e renderiza o atualizado para garantir a ordem e atualização completa
+                    existingPedidoDiv.remove();
+                    renderizarPedido(pedido, pedidoId);
+                }
+            });
+
+            // Ouve por pedidos removidos
+            pedidosRef.on('child_removed', (snapshot) => {
+                const pedidoId = snapshot.key;
+                const pedidoDiv = document.getElementById(pedidoId);
+                if (pedidoDiv) {
+                    pedidoDiv.remove();
+                }
+            });
+
+        } else {
+            // Usuário deslogado
+            toggleContent(false);
+            // Remove todos os listeners do Firebase Database quando o usuário desloga
+            pedidosRef.off();
+            listaPedidosContainer.innerHTML = ''; // Limpa a lista de pedidos
+        }
     });
 
-    // Ouve por pedidos atualizados
-    pedidosRef.on('child_changed', (snapshot) => {
-        const pedido = snapshot.val();
-        const pedidoId = snapshot.key;
-        const existingPedidoDiv = document.getElementById(pedidoId);
-        if (existingPedidoDiv) {
-            // Remove o pedido antigo e renderiza o atualizado para garantir a ordem e atualização completa
-            existingPedidoDiv.remove();
-            renderizarPedido(pedido, pedidoId);
-        }
+    // Evento de login
+    loginBtn.addEventListener('click', () => {
+        const email = loginEmailInput.value;
+        const password = loginPasswordInput.value;
+
+        auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Login bem-sucedido
+                loginErrorMessage.textContent = '';
+            })
+            .catch((error) => {
+                // Erro no login
+                let message = "Erro de login. Verifique seu email e senha.";
+                if (error.code === 'auth/user-not-found') {
+                    message = "Usuário não encontrado.";
+                } else if (error.code === 'auth/wrong-password') {
+                    message = "Senha incorreta.";
+                } else if (error.code === 'auth/invalid-email') {
+                    message = "Email inválido.";
+                }
+                loginErrorMessage.textContent = message;
+                console.error("Erro de login:", error);
+            });
+    });
+
+    // Evento de logout
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut().then(() => {
+            // Logout bem-sucedido
+            console.log("Usuário deslogado.");
+        }).catch((error) => {
+            console.error("Erro ao fazer logout:", error);
+        });
     });
 
     function renderizarPedido(pedido, pedidoId) {
@@ -166,14 +243,5 @@ document.addEventListener('DOMContentLoaded', () => {
             html2pdf().set(opt).from(tempDiv).save();
         });
     }
-
-    // Ouve por pedidos removidos
-    pedidosRef.on('child_removed', (snapshot) => {
-        const pedidoId = snapshot.key;
-        const pedidoDiv = document.getElementById(pedidoId);
-        if (pedidoDiv) {
-            pedidoDiv.remove();
-        }
-    });
 
 });
