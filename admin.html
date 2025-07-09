@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Administração - Cardápio Digital</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <header>
+        <h1>Painel de Administração</h1>
+        <a href="index.html">Ver Cardápio</a>
+    </header>
+
+    <main class="admin-main">
+        <!-- Seção de Categorias -->
+        <section class="admin-section">
+            <h2>Gerenciar Categorias</h2>
+            <div class="form-container">
+                <h3>Adicionar Nova Categoria</h3>
+                <input type="text" id="category-name" placeholder="Nome da Categoria" required>
+                <button id="add-category-btn">Adicionar Categoria</button>
+            </div>
+            <div class="list-container">
+                <h3>Categorias Existentes</h3>
+                <ul id="category-list">
+                    <!-- Categorias serão listadas aqui com botões de editar e excluir -->
+                </ul>
+            </div>
+        </section>
+
+        <!-- Seção de Itens do Cardápio -->
+        <section class="admin-section">
+            <h2>Gerenciar Itens do Cardápio</h2>
+            <div class="form-container">
+                <h3>Adicionar Novo Item</h3>
+                <select id="item-category" required>
+                    <option value="">Selecione uma Categoria</option>
+                    <!-- Opções de categoria serão preenchidas aqui -->
+                </select>
+                <input type="text" id="item-name" placeholder="Nome do Item" required>
+                <textarea id="item-description" placeholder="Descrição do Item"></textarea>
+                <input type="number" id="item-price" placeholder="Preço (ex: 10.50)" step="0.01" required>
+                <input type="number" id="item-stock" placeholder="Quantidade em Estoque" step="1" required>
+                <input type="url" id="item-image-url" placeholder="URL da Imagem do Item" required>
+                <button id="add-item-btn">Adicionar Item</button>
+            </div>
+            <div class="list-container">
+                <h3>Itens Existentes</h3>
+                <div id="item-list">
+                    <!-- Itens do cardápio serão listados aqui -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal para Edição de Item -->
+    <div id="edit-item-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Editar Item do Cardápio</h2>
+            <input type="hidden" id="edit-item-id">
+            <input type="hidden" id="edit-item-category-key">
+            
+            <label for="edit-item-name">Nome do Item:</label>
+            <input type="text" id="edit-item-name" required>
+            
+            <label for="edit-item-description">Descrição:</label>
+            <textarea id="edit-item-description"></textarea>
+            
+            <label for="edit-item-price">Preço:</label>
+            <input type="number" id="edit-item-price" step="0.01" required>
+            
+            <label for="edit-item-stock">Estoque:</label>
+            <input type="number" id="edit-item-stock" step="1" required>
+            
+            <label for="edit-item-image-url">URL da Imagem:</label>
+            <input type="url" id="edit-item-image-url" required>
+            
+            <button id="save-item-changes-btn" class="save-changes-btn">Salvar Alterações</button>
+        </div>
+    </div>
+
+    <!-- Modal para Edição de Categoria -->
+    <div id="edit-category-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>Editar Nome da Categoria</h2>
+            <input type="hidden" id="edit-category-key">
+            
+            <label for="edit-category-name">Novo Nome da Categoria:</label>
+            <input type="text" id="edit-category-name" required>
+            
+            <button id="save-category-changes-btn" class="save-changes-btn">Salvar Alterações</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+
+    <script src="firebase-config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

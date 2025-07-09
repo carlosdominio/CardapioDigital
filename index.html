@@ -37,11 +37,25 @@
         </aside>
     </main>
 
+    <!-- Modal Genérico para Solicitações -->
+    <div id="custom-modal" class="modal-overlay">
+        <div class="modal-container">
+            <h3 id="modal-title">Título do Modal</h3>
+            <p id="modal-text">Texto de ajuda opcional.</p>
+            <div id="modal-input-container">
+                <!-- Inputs serão inseridos aqui via JS -->
+            </div>
+            <div id="modal-error" class="modal-error-text"></div>
+            <div id="modal-actions" class="modal-actions">
+                <!-- Botões serão inseridos aqui via JS -->
+            </div>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 
     <script src="firebase-config.js"></script>
-    <script src="cardapio.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

@@ -16,6 +16,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const listaPedidosContainer = document.getElementById('lista-pedidos');
     const audioPermissionMessage = document.getElementById('audio-permission-message');
     const notificationSound = document.getElementById('notificationSound');
+    let originalTitle = document.title;
+    let intervalId = null;
+
+    // --- FUNÇÕES DE NOTIFICAÇÃO NO TÍTULO ---
+    function startTitleFlash(message) {
+        if (intervalId) return; // Evita múltiplos intervalos
+        let show = true;
+        intervalId = setInterval(() => {
+            document.title = show ? message : originalTitle;
+            show = !show;
+        }, 1000);
+    }
+
+    function stopTitleFlash() {
+        clearInterval(intervalId);
+        intervalId = null;
+        document.title = originalTitle;
+    }
+
+    // Para o pisca-pisca quando o usuário interage com a página
+    window.addEventListener('focus', stopTitleFlash);
+    window.addEventListener('click', stopTitleFlash);
+
 
     // Função para exibir/ocultar conteúdo com base no estado de autenticação
     function toggleContent(loggedIn) {
@@ -49,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pedidosRef.on('child_added', (snapshot) => {
                 const pedido = snapshot.val();
                 const pedidoId = snapshot.key;
-                renderizarPedido(pedido, pedidoId);
+                renderizarPedido(pedido, pedidoId, false); // false indica que não é uma atualização
             });
 
             // Ouve por pedidos atualizados
@@ -58,10 +81,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pedidoId = snapshot.key;
                 const existingPedidoDiv = document.getElementById(pedidoId);
                 if (existingPedidoDiv) {
-                    // Remove o pedido antigo e renderiza o atualizado para garantir a ordem e atualização completa
                     existingPedidoDiv.remove();
-                    renderizarPedido(pedido, pedidoId);
                 }
+                renderizarPedido(pedido, pedidoId, true); // true indica que é uma atualização
             });
 
             // Ouve por pedidos removidos
@@ -117,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    function renderizarPedido(pedido, pedidoId) {
+    function renderizarPedido(pedido, pedidoId, isUpdate) {
         // Função para formatar a forma de pagamento
         function formatarFormaPagamento(formaPagamento) {
             if (!formaPagamento) {
@@ -140,34 +162,69 @@ document.addEventListener('DOMContentLoaded', () => {
         pedidoDiv.className = 'pedido-card';
         pedidoDiv.id = pedidoId;
 
+        // Adiciona classes de destaque e animação
+        if (isUpdate) {
+            pedidoDiv.classList.add('pedido-atualizado', 'animating', 'flash-atualizado');
+        } else {
+            pedidoDiv.classList.add('pedido-novo', 'animating', 'flash-novo');
+        }
+
+        // Remove a classe de flash após a animação para não repetir
+        setTimeout(() => {
+            pedidoDiv.classList.remove('flash-novo', 'flash-atualizado');
+        }, 2100);
+
         // Formata a data para ser mais legível
         const dataPedido = new Date(pedido.timestamp).toLocaleString('pt-BR');
 
         // Monta o HTML interno do cartão
         let itensHtml = '';
         pedido.itens.forEach(item => {
-            itensHtml += `<li>${item.nome} (x${item.quantidade})</li>`;
+            const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+            itensHtml += `<li>${item.nome} (x${item.quantidade})${subTotal}</li>`;
         });
 
+        let itensAdicionadosHtml = '';
+        if (pedido.itensAdicionados && pedido.itensAdicionados.length > 0) {
+            itensAdicionadosHtml += `<h4 style="margin-top: 8px; margin-bottom: 2px; color: #d9534f;">Itens Adicionados:</h4><ul style="margin-top: 0; margin-bottom: 8px;">`;
+            pedido.itensAdicionados.forEach(item => {
+                const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+                itensAdicionadosHtml += `<li style="color: #d9534f; font-weight: bold;">${item.nome} (x${item.quantidade})${subTotal}</li>`;
+            });
+            itensAdicionadosHtml += `</ul>`;
+        }
+
+        const [mesaInfo, clienteInfo] = pedido.cliente.split(' - ');
+
         pedidoDiv.innerHTML = `
-            <h3>Pedido: ${pedido.cliente.replace(/-/, '- Cliente:')}</h3>
+            <h3>${mesaInfo}</h3>
+            <p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p>
             <p><strong>Horário:</strong> ${dataPedido}</p>
             <p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>
             ${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}
             <ul>${itensHtml}</ul>
+            ${itensAdicionadosHtml}
             <p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p>
-            <button class="concluir-btn">Fechar Conta</button>
-            <button class="concluir-btn gerar-pdf-btn">Gerar Comprovante</button>
+            <div class="button-container">
+                <button class="concluir-btn">Fechar Conta</button>
+                <button class="concluir-btn gerar-pdf-btn">Gerar Comprovante</button>
+            </div>
         `;
 
         // Adiciona o cartão no topo da lista
         listaPedidosContainer.prepend(pedidoDiv);
 
-        // Toca o som de notificação
+        // Toca o som e pisca o título
+        startTitleFlash('*** NOVO PEDIDO ***');
         const notificationSound = document.getElementById('notificationSound');
         if (notificationSound) {
             notificationSound.play().catch(e => console.error("Erro ao tocar o som:", e));
         }
+
+        // Adiciona listener para parar a animação ao clicar no card
+        pedidoDiv.addEventListener('click', () => {
+            pedidoDiv.classList.remove('animating');
+        }, { once: true }); // O listener é removido após o primeiro clique
 
         // Adiciona o listener para o botão de concluir
         const concluirBtn = pedidoDiv.querySelector('.concluir-btn');

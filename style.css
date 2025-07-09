@@ -108,6 +108,11 @@ h2 {
     background-color: #4cae4c;
 }
 
+.add-carrinho-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
 /* Seção do Carrinho */
 aside#carrinho {
     flex-basis: 30%;
@@ -209,7 +214,7 @@ aside#carrinho {
 #lista-pedidos {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    gap: 12px; /* Reduzido de 20px para 12px */
     width: 100%;
 }
 
@@ -226,6 +231,291 @@ aside#carrinho {
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: box-shadow 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+.pedido-card > *:not(.button-container) {
+    flex-grow: 0;
+}
+
+.pedido-card h3 {
+    margin-bottom: 0.5rem; /* 8px */
+}
+
+.pedido-card p {
+    margin-top: 0.25rem; /* 4px */
+    margin-bottom: 0.25rem; /* 4px */
+}
+
+.pedido-card ul {
+    margin-top: 0.75rem; /* 12px */
+    margin-bottom: 0.75rem; /* 12px */
+}
+
+.pedido-card .total-pedido {
+    margin-top: auto; /* Empurra o total e os botões para baixo */
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.button-container .concluir-btn {
+    flex: 1; /* Faz os botões ocuparem o mesmo espaço */
+    margin-top: 0;
+}
+
+.pedido-novo {
+    border-left-color: #5cb85c; /* Verde para novos pedidos */
+}
+
+.pedido-atualizado {
+    border-left-color: #d9534f; /* Vermelho para pedidos atualizados */
+}
+
+.pedido-atualizado.animating, .pedido-novo.animating {
+    animation: pulse-border 1.5s infinite;
+}
+
+.flash-novo {
+    animation: flash-green 2s 1;
+}
+
+.flash-atualizado {
+    animation: flash-red 2s 1;
+}
+
+@keyframes flash-green {
+    0%, 100% { background-color: #fff; }
+    50% { background-color: #d4edda; } /* Verde claro */
+}
+
+@keyframes flash-red {
+    0%, 100% { background-color: #fff; }
+    50% { background-color: #f8d7da; } /* Vermelho claro */
+}
+
+@keyframes pulse-border {
+    0% {
+        box-shadow: 0 0 0 0 rgba(217, 83, 79, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(217, 83, 79, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(217, 83, 79, 0);
+    }
+}
+
+/* Estilos do Modal Personalizado */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    visibility: hidden;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-container {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.visible .modal-container {
+    transform: scale(1);
+}
+
+#modal-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+#modal-text {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+#modal-input-container input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    margin-bottom: 10px;
+}
+
+#modal-error {
+    color: #d9534f;
+    font-size: 0.85em;
+    min-height: 20px;
+    margin-bottom: 10px;
+}
+
+#modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+#modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+#modal-actions button:hover {
+    transform: translateY(-2px);
+}
+
+.modal-btn-confirm {
+    background-color: #5cb85c;
+    color: white;
+}
+
+.modal-btn-cancel {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.modal-btn-primary {
+    background-color: #5bc0de;
+    color: white;
+}
+
+/* Estilos do Modal Personalizado */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-container {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+}
+
+.modal-overlay.visible .modal-container {
+    transform: scale(1);
+}
+
+#modal-title {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+#modal-text {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+#modal-input-container input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    margin-bottom: 10px;
+}
+
+#modal-error {
+    color: #d9534f;
+    font-size: 0.85em;
+    min-height: 20px;
+    margin-bottom: 10px;
+}
+
+#modal-actions {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+#modal-actions button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+#modal-actions button:hover {
+    transform: translateY(-2px);
+}
+
+.modal-btn-confirm {
+    background-color: #5cb85c;
+    color: white;
+}
+
+.modal-btn-cancel {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.modal-btn-primary {
+    background-color: #5bc0de;
+    color: white;
 }
 
 .pedido-card h3 {
