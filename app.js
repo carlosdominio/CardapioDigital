@@ -119,10 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const li = document.createElement('li');
             li.innerHTML = `
                 <div class="item-info">
-                    <span>${item.nome} (x${item.quantidade})</span>
-                    <span>R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
+                    <span class="item-nome">${item.nome}</span>
+                    <span class="item-subtotal">R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</span>
                 </div>
-                <button class="remover-item-btn" data-id="${item.id}">Remover</button>
+                <div class="item-controls">
+                    <button class="carrinho-btn diminui-btn" data-id="${item.id}">-</button>
+                    <span class="item-quantidade">${item.quantidade}</span>
+                    <button class="carrinho-btn aumenta-btn" data-id="${item.id}">+</button>
+                </div>
             `;
             carrinhoItensContainer.appendChild(li);
             total += item.preco * item.quantidade;
@@ -132,22 +136,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     carrinhoItensContainer.addEventListener('click', (event) => {
-        if (event.target.classList.contains('remover-item-btn')) {
-            const id = event.target.dataset.id;
-            removerDoCarrinho(id);
+        const target = event.target;
+        const id = target.dataset.id;
+
+        if (!id) return;
+
+        if (target.classList.contains('aumenta-btn')) {
+            adicionarAoCarrinho(id); // Reutiliza a lógica de adicionar, que já checa o estoque
+        } else if (target.classList.contains('diminui-btn')) {
+            removerDoCarrinho(id, false); // O segundo parâmetro 'false' indica para remover apenas um
         }
     });
 
-    function removerDoCarrinho(id) {
+    function removerDoCarrinho(id, removerTudo = false) {
         const itemIndex = carrinho.findIndex(item => item.id === id);
+        if (itemIndex === -1) return;
 
-        if (itemIndex > -1) {
-            const item = carrinho[itemIndex];
-            if (item.quantidade > 1) {
-                item.quantidade--;
-            } else {
-                carrinho.splice(itemIndex, 1);
-            }
+        if (removerTudo || carrinho[itemIndex].quantidade === 1) {
+            carrinho.splice(itemIndex, 1);
+        } else {
+            carrinho[itemIndex].quantidade--;
         }
         renderizarCarrinho();
     }
