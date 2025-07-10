@@ -17,24 +17,6 @@
             <!-- As categorias e itens do cardápio serão inseridos aqui pelo JavaScript -->
         </section>
 
-        <aside id="carrinho">
-            <h2>Meus Pedidos</h2>
-            <ul id="carrinho-itens">
-                <!-- Itens do carrinho aparecerão aqui -->
-            </ul>
-            <p>Total: <span id="carrinho-total">R$ 0,00</span></p>
-
-            <div class="forma-pagamento">
-                <h3>Forma de Pagamento:</h3>
-                <label><input type="radio" name="pagamento" value="pix" checked> Pix</label><br>
-                <label><input type="radio" name="pagamento" value="cartao"> Cartão de Crédito/Débito</label><br>
-                <label><input type="radio" name="pagamento" value="dinheiro"> Dinheiro</label>
-            </div>
-
-            <button id="finalizar-pedido">Finalizar Pedido</button>
-
-            
-        </aside>
     </main>
 
     <!-- Modal Genérico para Solicitações -->
@@ -48,6 +30,39 @@
             <div id="modal-error" class="modal-error-text"></div>
             <div id="modal-actions" class="modal-actions">
                 <!-- Botões serão inseridos aqui via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Flutuante do Carrinho (FAB) -->
+    <button id="cart-fab" class="cart-fab">
+        🛒
+        <span id="cart-item-count" class="cart-item-count">0</span>
+    </button>
+
+    <!-- Modal do Carrinho -->
+    <div id="cart-modal" class="modal-overlay">
+        <div class="modal-container cart-modal-content">
+            <div class="cart-modal-header">
+                <h2>Meus Pedidos</h2>
+                <button id="close-cart-modal-btn" class="close-btn">&times;</button>
+            </div>
+            <div class="cart-modal-body">
+                <ul id="carrinho-itens">
+                    <!-- Itens do carrinho aparecerão aqui -->
+                </ul>
+            </div>
+            <div class="cart-modal-footer">
+                <div class="forma-pagamento">
+                    <h3>Forma de Pagamento:</h3>
+                    <label><input type="radio" name="pagamento" value="pix" checked> Pix</label>
+                    <label><input type="radio" name="pagamento" value="cartao"> Cartão</label>
+                    <label><input type="radio" name="pagamento" value="dinheiro"> Dinheiro</label>
+                </div>
+                <div class="cart-total-section">
+                    <p>Total: <span id="carrinho-total">R$ 0,00</span></p>
+                    <button id="finalizar-pedido">Finalizar Pedido</button>
+                </div>
             </div>
         </div>
     </div>

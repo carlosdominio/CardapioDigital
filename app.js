@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h4>${item.nome}</h4>
                     <p class="item-descricao">${item.descricao}</p>
                     <p class="item-preco">R$ ${item.preco.toFixed(2).replace('.', ',')}</p>
-                    <button class="add-carrinho-btn" data-id="${item.id}" data-nome="${item.nome}" data-preco="${item.preco}" ${!isAvailable ? 'disabled' : ''}>
+                    <button class="add-carrinho-btn" data-item-key="${itemKey}" data-category-key="${categoryKey}" ${!isAvailable ? 'disabled' : ''}>
                         ${isAvailable ? 'Adicionar ao Pedido' : 'Indisponível'}
                     </button>
                 `;
@@ -67,11 +67,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const carrinho = [];
     const carrinhoItensContainer = document.getElementById('carrinho-itens');
     const carrinhoTotalEl = document.getElementById('carrinho-total');
+    const cartFab = document.getElementById('cart-fab');
+    const cartModal = document.getElementById('cart-modal');
+    const closeCartModalBtn = document.getElementById('close-cart-modal-btn');
+    const cartItemCount = document.getElementById('cart-item-count');
 
     menuContainer.addEventListener('click', (event) => {
-        if (event.target.classList.contains('add-carrinho-btn')) {
-            const id = event.target.dataset.id;
-            adicionarAoCarrinho(id);
+        const button = event.target.closest('.add-carrinho-btn');
+        if (button) {
+            const itemKey = button.dataset.itemKey;
+            const categoryKey = button.dataset.categoryKey;
+            adicionarAoCarrinho(itemKey, categoryKey);
         }
     });
 
@@ -90,23 +96,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3000); // A notificação some após 3 segundos
     }
 
-    function adicionarAoCarrinho(id) {
-        let itemNoCardapio;
-        let categoriaDoItem;
-        for (const categoryKey in cardapioCompleto) {
-            if (cardapioCompleto[categoryKey].itens && cardapioCompleto[categoryKey].itens[id]) {
-                itemNoCardapio = cardapioCompleto[categoryKey].itens[id];
-                categoriaDoItem = categoryKey;
-                break;
-            }
-        }
+    function adicionarAoCarrinho(itemKey, categoryKey) {
+        const itemNoCardapio = cardapioCompleto?.[categoryKey]?.itens?.[itemKey];
 
         if (!itemNoCardapio || itemNoCardapio.estoque <= 0) {
             alert("Este item não está disponível em estoque.");
             return;
         }
 
-        const itemExistente = carrinho.find(item => item.id === id);
+        const itemExistente = carrinho.find(item => item.id === itemKey);
 
         if (itemExistente) {
             if (itemExistente.quantidade < itemNoCardapio.estoque) {
@@ -115,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(`Você já atingiu o limite de estoque para ${itemExistente.nome}.`);
             }
         } else {
-            carrinho.push({ ...itemNoCardapio, quantidade: 1, categoryKey: categoriaDoItem });
+            carrinho.push({ ...itemNoCardapio, id: itemKey, quantidade: 1, categoryKey: categoryKey });
         }
         renderizarCarrinho();
         showToast(`${itemNoCardapio.nome} foi adicionado ao seu pedido!`);
@@ -124,12 +122,23 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderizarCarrinho() {
         carrinhoItensContainer.innerHTML = '';
         let total = 0;
+        const totalItems = carrinho.reduce((sum, item) => sum + item.quantidade, 0);
+
+        // Atualiza o contador no botão flutuante
+        cartItemCount.textContent = totalItems;
+        cartItemCount.style.display = totalItems > 0 ? 'flex' : 'none';
+
+
+        const finalizarPedidoBtn = document.getElementById('finalizar-pedido');
 
         if (carrinho.length === 0) {
             carrinhoItensContainer.innerHTML = '<li>Seu carrinho está vazio.</li>';
             carrinhoTotalEl.textContent = `R$ 0,00`;
+            finalizarPedidoBtn.classList.add('disabled');
             return;
         }
+
+        finalizarPedidoBtn.classList.remove('disabled');
 
         carrinho.forEach(item => {
             const li = document.createElement('li');
@@ -158,7 +167,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!id) return;
 
         if (target.classList.contains('aumenta-btn')) {
-            adicionarAoCarrinho(id); // Reutiliza a lógica de adicionar, que já checa o estoque
+            const item = carrinho.find(i => i.id === id);
+            if (item) {
+                adicionarAoCarrinho(item.id, item.categoryKey); // Reutiliza a lógica de adicionar, que já checa o estoque
+            }
         } else if (target.classList.contains('diminui-btn')) {
             removerDoCarrinho(id, false); // O segundo parâmetro 'false' indica para remover apenas um
         }
@@ -177,6 +189,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     renderizarCarrinho();
+
+    // --- LÓGICA DO MODAL DO CARRINHO ---
+    cartFab.addEventListener('click', () => {
+        cartModal.classList.add('visible');
+    });
+
+    closeCartModalBtn.addEventListener('click', () => {
+        cartModal.classList.remove('visible');
+    });
+
+    // Fecha o modal se clicar fora da área de conteúdo
+    cartModal.addEventListener('click', (event) => {
+        if (event.target === cartModal) {
+            cartModal.classList.remove('visible');
+        }
+    });
+
 
     const finalizarPedidoBtn = document.getElementById('finalizar-pedido');
     const modal = document.getElementById('custom-modal');
@@ -252,6 +281,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- NOVO FLUXO DE FINALIZAR PEDIDO ---
     finalizarPedidoBtn.addEventListener('click', async () => {
+        // Fecha o modal do carrinho antes de iniciar o fluxo de finalização
+        cartModal.classList.remove('visible');
+
+        // A verificação de carrinho vazio não é mais estritamente necessária aqui,
+        // pois o botão estará desabilitado, mas mantemos como uma segurança extra.
         if (carrinho.length === 0) {
             await showModal({ title: 'Carrinho Vazio', text: 'Seu carrinho está vazio. Adicione itens antes de finalizar.', confirmText: 'Entendi' });
             return;
@@ -334,6 +368,7 @@ document.addEventListener('DOMContentLoaded', () => {
             darBaixaEstoque();
             carrinho.length = 0;
             renderizarCarrinho();
+            cartModal.classList.remove('visible'); // Fecha o modal do carrinho
 
             await showModal({
                 title: 'Sucesso!',
@@ -400,6 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
             darBaixaEstoque();
             carrinho.length = 0;
             renderizarCarrinho();
+            cartModal.classList.remove('visible'); // Fecha o modal do carrinho
             
             await showModal({
                 title: 'Pedido Enviado!',

@@ -20,7 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- REFERÊNCIAS DO MODAL ---
     const editModal = document.getElementById('edit-item-modal');
-    const closeBtn = document.querySelector('.close-btn');
     const saveChangesBtn = document.getElementById('save-item-changes-btn');
     const editItemIdInput = document.getElementById('edit-item-id');
     const editItemCategoryKeyInput = document.getElementById('edit-item-category-key');
@@ -206,7 +205,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNÇÕES DO MODAL ---
 
-    // Adiciona listener para o botão de fechar do modal de categoria
+    // Adiciona listeners para os botões de fechar dos modais
+    editModal.querySelector('.close-btn').onclick = () => {
+        editModal.style.display = 'none';
+    };
     editCategoryModal.querySelector('.close-btn').onclick = () => {
         editCategoryModal.style.display = 'none';
     };
@@ -240,10 +242,11 @@ document.addEventListener('DOMContentLoaded', () => {
         editModal.style.display = 'none';
     }
 
-    closeBtn.onclick = closeEditModal;
     window.onclick = (event) => {
-        if (event.target == editModal || event.target == editCategoryModal) {
-            closeEditModal();
+        if (event.target == editModal) {
+            editModal.style.display = 'none';
+        }
+        if (event.target == editCategoryModal) {
             editCategoryModal.style.display = 'none';
         }
     };
