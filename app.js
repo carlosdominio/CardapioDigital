@@ -75,6 +75,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    const cartToast = document.getElementById('cart-toast');
+    const toastText = document.getElementById('toast-text');
+    let toastTimer;
+
+    function showToast(message) {
+        if (toastTimer) {
+            clearTimeout(toastTimer);
+        }
+        toastText.textContent = message;
+        cartToast.classList.add('show');
+        toastTimer = setTimeout(() => {
+            cartToast.classList.remove('show');
+        }, 3000); // A notificação some após 3 segundos
+    }
+
     function adicionarAoCarrinho(id) {
         let itemNoCardapio;
         let categoriaDoItem;
@@ -103,6 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
             carrinho.push({ ...itemNoCardapio, quantidade: 1, categoryKey: categoriaDoItem });
         }
         renderizarCarrinho();
+        showToast(`${itemNoCardapio.nome} foi adicionado ao seu pedido!`);
     }
 
     function renderizarCarrinho() {
