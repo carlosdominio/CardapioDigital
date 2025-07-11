@@ -255,7 +255,7 @@ aside#carrinho {
 #lista-pedidos {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 12px; /* Reduzido de 20px para 12px */
+    gap: 30px;
     width: 100%;
 }
 
@@ -318,26 +318,8 @@ aside#carrinho {
     border-left-color: #d9534f; /* Vermelho para pedidos atualizados */
 }
 
-.pedido-atualizado.animating, .pedido-novo.animating {
-    animation: pulse-border 1.5s infinite;
-}
-
-.flash-novo {
-    animation: flash-green 2s 1;
-}
-
-.flash-atualizado {
-    animation: flash-red 2s 1;
-}
-
-@keyframes flash-green {
-    0%, 100% { background-color: #fff; }
-    50% { background-color: #d4edda; } /* Verde claro */
-}
-
-@keyframes flash-red {
-    0%, 100% { background-color: #fff; }
-    50% { background-color: #f8d7da; } /* Vermelho claro */
+.animating {
+    animation: pulse-border 1.5s infinite !important;
 }
 
 @keyframes pulse-border {

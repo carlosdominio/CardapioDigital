@@ -19,6 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
     let originalTitle = document.title;
     let intervalId = null;
 
+    // --- LÓGICA DE TIMESTAMP DA ÚLTIMA VISITA ---
+    const LAST_VISIT_KEY = 'lastVisitTimestamp';
+    let lastVisitTimestamp = localStorage.getItem(LAST_VISIT_KEY);
+    // Atualiza o timestamp da visita atual. Fazemos isso no início para que qualquer
+    // pedido que chegue durante a sessão seja comparado com o início da sessão.
+    localStorage.setItem(LAST_VISIT_KEY, Date.now());
+
+
     // --- FUNÇÕES DE NOTIFICAÇÃO NO TÍTULO ---
     function startTitleFlash(message) {
         if (intervalId) return; // Evita múltiplos intervalos
@@ -162,18 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         pedidoDiv.className = 'pedido-card';
         pedidoDiv.id = pedidoId;
 
-        // Adiciona classes de destaque e animação
-        if (isUpdate) {
-            pedidoDiv.classList.add('pedido-atualizado', 'animating', 'flash-atualizado');
-        } else {
-            pedidoDiv.classList.add('pedido-novo', 'animating', 'flash-novo');
-        }
-
-        // Remove a classe de flash após a animação para não repetir
-        setTimeout(() => {
-            pedidoDiv.classList.remove('flash-novo', 'flash-atualizado');
-        }, 2100);
-
         // Formata a data para ser mais legível
         const dataPedido = new Date(pedido.timestamp).toLocaleString('pt-BR');
 
@@ -214,17 +210,27 @@ document.addEventListener('DOMContentLoaded', () => {
         // Adiciona o cartão no topo da lista
         listaPedidosContainer.prepend(pedidoDiv);
 
-        // Toca o som e pisca o título
-        startTitleFlash('*** NOVO PEDIDO ***');
-        const notificationSound = document.getElementById('notificationSound');
-        if (notificationSound) {
-            notificationSound.play().catch(e => console.error("Erro ao tocar o som:", e));
+        // Aplica a cor da borda apropriada
+        if (isUpdate) {
+            pedidoDiv.classList.add('pedido-atualizado');
+        } else {
+            pedidoDiv.classList.add('pedido-novo');
         }
 
-        // Adiciona listener para parar a animação ao clicar no card
-        pedidoDiv.addEventListener('click', () => {
-            pedidoDiv.classList.remove('animating');
-        }, { once: true }); // O listener é removido após o primeiro clique
+        // Lógica de Animação
+        const pedidoTimestamp = new Date(pedido.timestamp).getTime();
+        // Anima se for uma atualização (isUpdate) ou se o pedido chegou depois da última visita.
+        // Se não houver lastVisitTimestamp (primeira visita), não anima os pedidos antigos.
+        const shouldAnimate = isUpdate || (lastVisitTimestamp && pedidoTimestamp > lastVisitTimestamp);
+
+        if (shouldAnimate) {
+            pedidoDiv.classList.add('animating');
+            startTitleFlash('*** NOVO PEDIDO ***');
+            const notificationSound = document.getElementById('notificationSound');
+            if (notificationSound) {
+                notificationSound.play().catch(e => console.error("Erro ao tocar o som:", e));
+            }
+        }
 
         // Adiciona o listener para o botão de concluir
         const concluirBtn = pedidoDiv.querySelector('.concluir-btn');
@@ -252,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
 
             pedido.itens.forEach(item => {
-                const itemTotal = (item.preco * item.quantidade).toFixed(2).replace('.', ',');
+                const itemTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
                 itensTableHtml += `
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: left;">${item.nome}</td>
