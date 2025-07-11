@@ -230,6 +230,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (notificationSound) {
                 notificationSound.play().catch(e => console.error("Erro ao tocar o som:", e));
             }
+
+            // Adiciona listener para remover a animação ao clicar
+            const clickHandler = () => {
+                pedidoDiv.classList.remove('animating');
+                pedidoDiv.removeEventListener('click', clickHandler);
+            };
+            pedidoDiv.addEventListener('click', clickHandler);
         }
 
         // Adiciona o listener para o botão de concluir
