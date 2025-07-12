@@ -319,13 +319,29 @@ aside#carrinho {
     border-left-color: #d9534f; /* Vermelho para pedidos atualizados */
 }
 
-.animating {
-    animation: pulse-border 1.5s infinite !important;
+.pedido-novo.animating {
+    animation: pulse-border-green 1.5s infinite !important;
 }
 
-@keyframes pulse-border {
+.pedido-atualizado.animating {
+    animation: pulse-border-red 1.5s infinite !important;
+}
+
+@keyframes pulse-border-green {
     0% {
-        box-shadow: 0 0 0 0 rgba(217, 83, 79, 0.7);
+        box-shadow: 0 0 0 0 rgba(92, 184, 92, 0.7); /* Verde */
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(92, 184, 92, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(92, 184, 92, 0);
+    }
+}
+
+@keyframes pulse-border-red {
+    0% {
+        box-shadow: 0 0 0 0 rgba(217, 83, 79, 0.7); /* Vermelho */
     }
     70% {
         box-shadow: 0 0 0 10px rgba(217, 83, 79, 0);
