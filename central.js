@@ -169,20 +169,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } else if (target.classList.contains('nao-confirmar-btn')) {
             card.classList.remove('animating'); // Feedback visual imediato
-            const pedido = JSON.parse(card.dataset.pedido);
-            
-            // Recalcula o total baseado apenas nos itens originais
-            let novoTotal = 0;
-            pedido.itens.forEach(item => {
-                novoTotal += item.preco * item.quantidade;
-            });
-            pedido.total = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`;
 
-            delete pedido.itensAdicionados;
-            delete pedido.versao;
-            
-            addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
-            database.ref('pedidos/' + card.id).set(pedido);
+            // Se for um pedido novo (não uma atualização), ele deve ser excluído.
+            if (card.classList.contains('pedido-novo')) {
+                database.ref('pedidos/' + card.id).remove();
+            } else {
+                // Se for uma atualização de um pedido existente, reverte as alterações.
+                const pedido = JSON.parse(card.dataset.pedido);
+                
+                // Recalcula o total baseado apenas nos itens originais
+                let novoTotal = 0;
+                pedido.itens.forEach(item => {
+                    novoTotal += item.preco * item.quantidade;
+                });
+                pedido.total = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`;
+
+                delete pedido.itensAdicionados;
+                delete pedido.versao;
+                
+                addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
+                database.ref('pedidos/' + card.id).set(pedido);
+            }
 
         } else if (target.classList.contains('concluir-btn')) {
             database.ref('pedidos/' + card.id).remove();
