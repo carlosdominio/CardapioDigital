@@ -1,24 +1,59 @@
-/* Estilos para o Painel de Administração */
+/* =================================
+   Estilos do Header (Admin)
+   ================================= */
 
-.admin-main {
+body > header {
     display: flex;
     flex-direction: column;
-    gap: 40px;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    border-bottom: 1px solid #eee; /* Adiciona uma linha sutil de separação */
+}
+
+.header-link-btn {
+    margin-top: 15px; /* Espaçamento agradável */
+    background-color: #5bc0de; /* Azul */
+    color: white;
+    padding: 10px 18px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.header-link-btn:hover {
+    background-color: #31b0d5;
+    transform: translateY(-2px);
+}
+
+
+/* =================================
+   Estilos Gerais do Painel Admin
+   ================================= */
+
+.admin-main {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
 .admin-section {
     background-color: #fff;
-    padding: 20px;
+    padding: 30px;
     border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
 }
 
 .admin-section h2 {
+    margin-top: 0;
+    margin-bottom: 25px;
     border-bottom-color: #5cb85c; /* Verde para o admin */
-}
-
-.form-container, .list-container {
-    margin-top: 20px;
 }
 
 .form-container h3, .list-container h3 {
@@ -26,7 +61,17 @@
     color: #333;
     border-bottom: 1px solid #eee;
     padding-bottom: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 20px;
+    font-size: 1.3em; /* Aumentado */
+    font-weight: 600; /* Mais forte */
+}
+
+/* =================================
+   Estilos de Formulário
+   ================================= */
+
+.form-container {
+    margin-bottom: 40px; /* Aumenta o espaço entre o form e a lista */
 }
 
 .form-container input[type="text"],
@@ -35,34 +80,74 @@
 .form-container textarea,
 .form-container select {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 12px;
+    margin-bottom: 15px;
     border: 1px solid #ccc;
-    border-radius: 4px;
+    border-radius: 5px;
     font-size: 1em;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-container input:focus,
+.form-container textarea:focus,
+.form-container select:focus {
+    outline: none;
+    border-color: #5cb85c;
+    box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.2);
 }
 
 .form-container textarea {
-    min-height: 80px;
+    min-height: 100px;
     resize: vertical;
+    line-height: 1.5; /* Melhora a legibilidade do texto digitado */
+    font-size: 1.05em; /* Um pouco maior para destaque */
+}
+
+/* Melhora a visibilidade do placeholder */
+.form-container textarea::placeholder {
+    color: #888;
+    opacity: 1; /* Firefox precisa disso */
 }
 
 .form-container button {
     background-color: #5cb85c;
     color: white;
     border: none;
-    padding: 12px 20px;
+    padding: 12px 25px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
+    font-weight: 600;
     transition: background-color 0.2s;
+    width: 100%;
 }
 
 .form-container button:hover {
     background-color: #4cae4c;
 }
 
-#category-list, #item-list {
+/* Layout específico para o form de categoria */
+#add-category-form {
+    display: flex;
+    gap: 10px;
+}
+
+#add-category-form input {
+    flex-grow: 1;
+    margin-bottom: 0;
+}
+
+#add-category-form button {
+    width: auto;
+    flex-shrink: 0;
+}
+
+
+/* =================================
+   Estilos de Lista
+   ================================= */
+
+#category-list, #item-list ul {
     list-style: none;
     padding: 0;
 }
@@ -72,71 +157,75 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-    gap: 10px;
+    padding: 15px;
+    border: 1px solid #f0f0f0;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+#category-list li:hover,
+#item-list li:hover {
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 #category-list li span,
 #item-list li span {
     flex-grow: 1;
     word-break: break-word;
+    font-weight: 600; /* Negrito */
+    color: #333;
 }
 
 .action-buttons {
     display: flex;
+    gap: 8px;
     flex-shrink: 0;
 }
 
 .edit-btn, .delete-btn {
-    margin-left: 5px;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: white;
+    transition: opacity 0.2s;
+}
+
+.edit-btn:hover, .delete-btn:hover {
+    opacity: 0.85;
 }
 
 .edit-btn {
     background-color: #f0ad4e; /* Laranja */
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-
-.edit-btn:hover {
-    background-color: #ec971f;
 }
 
 .delete-btn {
-    background-color: #d9534f;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 0.9em;
-}
-
-.delete-btn:hover {
-    background-color: #c9302c;
+    background-color: #d9534f; /* Vermelho */
 }
 
 #item-list .item-group {
-    margin-bottom: 20px;
+    margin-bottom: 30px;
 }
 
 #item-list .item-group h4 {
     color: #d9534f;
     margin-bottom: 10px;
+    padding-left: 5px;
 }
 
 #item-list ul {
-    list-style: none;
-    padding-left: 15px;
-    border-left: 2px solid #f0f0f0;
+    padding-left: 20px;
+    border-left: 3px solid #f0f0f0;
 }
 
 
-/* Estilos do Modal Melhorados */
+/* =================================
+   Estilos de Modal
+   ================================= */
+
 .modal {
     display: none;
     position: fixed;
@@ -147,42 +236,25 @@
     height: 100%;
     overflow: auto;
     background-color: rgba(0, 0, 0, 0.6);
-    -webkit-animation-name: fadeIn;
-    -webkit-animation-duration: 0.4s;
-    animation-name: fadeIn;
-    animation-duration: 0.4s
+    animation: fadeIn 0.3s;
 }
 
 .modal-content {
     background-color: #fefefe;
     margin: 5% auto;
-    padding: 25px 35px;
+    padding: 30px 40px;
     border: none;
     width: 90%;
     max-width: 550px;
     border-radius: 10px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
     position: relative;
-    -webkit-animation-name: slideIn;
-    -webkit-animation-duration: 0.4s;
-    animation-name: slideIn;
-    animation-duration: 0.4s
-}
-
-/* Animações */
-@-webkit-keyframes slideIn {
-    from {top: -300px; opacity: 0}
-    to {top: 0; opacity: 1}
+    animation: slideIn 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 @keyframes slideIn {
-    from {top: -300px; opacity: 0}
-    to {top: 0; opacity: 1}
-}
-
-@-webkit-keyframes fadeIn {
-    from {opacity: 0}
-    to {opacity: 1}
+    from {transform: translateY(-50px); opacity: 0}
+    to {transform: translateY(0); opacity: 1}
 }
 
 @keyframes fadeIn {
@@ -216,8 +288,8 @@
 
 .modal-content label {
     display: block;
-    margin-top: 12px;
-    margin-bottom: 6px;
+    margin-top: 15px;
+    margin-bottom: 5px;
     font-weight: 600;
     color: #555;
 }
@@ -234,13 +306,11 @@
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.modal-content input[type="text"]:focus,
-.modal-content input[type="number"]:focus,
-.modal-content input[type="url"]:focus,
+.modal-content input:focus,
 .modal-content textarea:focus {
     outline: none;
     border-color: #5cb85c;
-    box-shadow: 0 0 5px rgba(92, 184, 92, 0.5);
+    box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.2);
 }
 
 .save-changes-btn {
@@ -252,11 +322,44 @@
     cursor: pointer;
     font-size: 1.1em;
     font-weight: bold;
-    margin-top: 25px;
+    margin-top: 30px;
     width: 100%;
     transition: background-color 0.2s;
 }
 
 .save-changes-btn:hover {
     background-color: #4cae4c;
+}
+
+/* =================================
+   Responsividade
+   ================================= */
+@media (max-width: 600px) {
+    .admin-main {
+        padding: 10px;
+    }
+
+    .admin-section {
+        padding: 20px;
+    }
+
+    #add-category-form {
+        flex-direction: column;
+    }
+
+    #add-category-form button {
+        width: 100%;
+    }
+
+    #category-list li,
+    #item-list li {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .action-buttons {
+        width: 100%;
+        justify-content: flex-start;
+    }
 }

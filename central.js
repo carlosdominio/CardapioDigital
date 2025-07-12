@@ -18,18 +18,36 @@ document.addEventListener('DOMContentLoaded', () => {
     const notificationSound = document.getElementById('notificationSound');
     let originalTitle = document.title;
     let intervalId = null;
+    let userHasInteracted = false;
 
-    // --- LÓGICA DE TIMESTAMP DA ÚLTIMA VISITA ---
-    const LAST_VISIT_KEY = 'lastVisitTimestamp';
-    let lastVisitTimestamp = localStorage.getItem(LAST_VISIT_KEY);
-    // Atualiza o timestamp da visita atual. Fazemos isso no início para que qualquer
-    // pedido que chegue durante a sessão seja comparado com o início da sessão.
-    localStorage.setItem(LAST_VISIT_KEY, Date.now());
+    // --- LÓGICA DE PEDIDOS VISTOS ---
+    const SEEN_PEDIDOS_KEY = 'seenPedidos';
 
+    function getSeenPedidos() {
+        const seen = localStorage.getItem(SEEN_PEDIDOS_KEY);
+        return seen ? JSON.parse(seen) : [];
+    }
+
+    function addPedidoToSeen(pedidoId) {
+        const seen = getSeenPedidos();
+        if (!seen.includes(pedidoId)) {
+            seen.push(pedidoId);
+            localStorage.setItem(SEEN_PEDIDOS_KEY, JSON.stringify(seen));
+        }
+    }
+
+    function removePedidoFromSeen(pedidoId) {
+        let seen = getSeenPedidos();
+        const index = seen.indexOf(pedidoId);
+        if (index > -1) {
+            seen.splice(index, 1);
+            localStorage.setItem(SEEN_PEDIDOS_KEY, JSON.stringify(seen));
+        }
+    }
 
     // --- FUNÇÕES DE NOTIFICAÇÃO NO TÍTULO ---
     function startTitleFlash(message) {
-        if (intervalId) return; // Evita múltiplos intervalos
+        if (intervalId) return;
         let show = true;
         intervalId = setInterval(() => {
             document.title = show ? message : originalTitle;
@@ -43,143 +61,148 @@ document.addEventListener('DOMContentLoaded', () => {
         document.title = originalTitle;
     }
 
-    // Para o pisca-pisca quando o usuário interage com a página
     window.addEventListener('focus', stopTitleFlash);
-    window.addEventListener('click', stopTitleFlash);
+    window.addEventListener('click', () => {
+        stopTitleFlash();
+        userHasInteracted = true;
+    });
 
-
-    // Função para exibir/ocultar conteúdo com base no estado de autenticação
     function toggleContent(loggedIn) {
         if (loggedIn) {
+            document.body.classList.remove('login-view');
             loginContainer.style.display = 'none';
             appContent.style.display = 'block';
         } else {
+            document.body.classList.add('login-view');
             loginContainer.style.display = 'block';
             appContent.style.display = 'none';
         }
     }
 
-    // Listener para o estado de autenticação
     auth.onAuthStateChanged(user => {
         if (user) {
-            // Usuário logado
             toggleContent(true);
-            // Adiciona um listener para o clique na mensagem de permissão de áudio
             if (audioPermissionMessage && notificationSound) {
                 audioPermissionMessage.addEventListener('click', () => {
                     notificationSound.play().then(() => {
-                        // Se o som tocar, oculta a mensagem
+                        userHasInteracted = true;
                         audioPermissionMessage.style.display = 'none';
                     }).catch(e => {
                         console.error("Erro ao tentar tocar o som na interação inicial:", e);
+                        userHasInteracted = true;
+                        audioPermissionMessage.style.display = 'none';
                     });
                 });
             }
 
-            // Ouve por novos pedidos adicionados
             pedidosRef.on('child_added', (snapshot) => {
-                const pedido = snapshot.val();
-                const pedidoId = snapshot.key;
-                renderizarPedido(pedido, pedidoId, false); // false indica que não é uma atualização
+                renderizarPedido(snapshot.val(), snapshot.key, false);
             });
 
-            // Ouve por pedidos atualizados
             pedidosRef.on('child_changed', (snapshot) => {
-                const pedido = snapshot.val();
                 const pedidoId = snapshot.key;
+                removePedidoFromSeen(pedidoId);
                 const existingPedidoDiv = document.getElementById(pedidoId);
-                if (existingPedidoDiv) {
-                    existingPedidoDiv.remove();
-                }
-                renderizarPedido(pedido, pedidoId, true); // true indica que é uma atualização
+                if (existingPedidoDiv) existingPedidoDiv.remove();
+                renderizarPedido(snapshot.val(), pedidoId, true);
             });
 
-            // Ouve por pedidos removidos
             pedidosRef.on('child_removed', (snapshot) => {
-                const pedidoId = snapshot.key;
-                const pedidoDiv = document.getElementById(pedidoId);
-                if (pedidoDiv) {
-                    pedidoDiv.remove();
-                }
+                const pedidoDiv = document.getElementById(snapshot.key);
+                if (pedidoDiv) pedidoDiv.remove();
             });
 
         } else {
-            // Usuário deslogado
             toggleContent(false);
-            // Remove todos os listeners do Firebase Database quando o usuário desloga
             pedidosRef.off();
-            listaPedidosContainer.innerHTML = ''; // Limpa a lista de pedidos
+            listaPedidosContainer.innerHTML = '';
         }
     });
 
-    // Evento de login
     loginBtn.addEventListener('click', () => {
         const email = loginEmailInput.value;
         const password = loginPasswordInput.value;
-
         auth.signInWithEmailAndPassword(email, password)
-            .then((userCredential) => {
-                // Login bem-sucedido
-                loginErrorMessage.textContent = '';
-            })
+            .then(() => { loginErrorMessage.textContent = ''; })
             .catch((error) => {
-                // Erro no login
                 let message = "Erro de login. Verifique seu email e senha.";
-                if (error.code === 'auth/user-not-found') {
-                    message = "Usuário não encontrado.";
-                } else if (error.code === 'auth/wrong-password') {
-                    message = "Senha incorreta.";
-                } else if (error.code === 'auth/invalid-email') {
-                    message = "Email inválido.";
-                }
+                if (error.code === 'auth/user-not-found') message = "Usuário não encontrado.";
+                else if (error.code === 'auth/wrong-password') message = "Senha incorreta.";
+                else if (error.code === 'auth/invalid-email') message = "Email inválido.";
                 loginErrorMessage.textContent = message;
-                console.error("Erro de login:", error);
             });
     });
 
-    // Evento de logout
     logoutBtn.addEventListener('click', () => {
-        auth.signOut().then(() => {
-            // Logout bem-sucedido
-            console.log("Usuário deslogado.");
-        }).catch((error) => {
-            console.error("Erro ao fazer logout:", error);
-        });
+        auth.signOut();
     });
 
-    function renderizarPedido(pedido, pedidoId, isUpdate) {
-        // Função para formatar a forma de pagamento
-        function formatarFormaPagamento(formaPagamento) {
-            if (!formaPagamento) {
-                return 'Não Informado';
-            }
-            switch (formaPagamento) {
-                case 'pix':
-                    return 'Pix';
-                case 'cartao':
-                    return 'Cartão de Crédito/Débito';
-                case 'dinheiro':
-                    return 'Dinheiro';
-                default:
-                    return formaPagamento.toUpperCase(); // Fallback para valores desconhecidos
-            }
-        }
+    listaPedidosContainer.addEventListener('click', (event) => {
+        const target = event.target;
+        const card = target.closest('.pedido-card');
+        if (!card) return;
 
-        // Cria o elemento do cartão para o novo pedido
+        if (target.classList.contains('confirmar-btn')) {
+            card.classList.remove('animating');
+            addPedidoToSeen(card.id);
+            target.textContent = 'Fechar Conta';
+            target.classList.remove('confirmar-btn');
+            target.classList.add('concluir-btn');
+        }
+        else if (target.classList.contains('concluir-btn')) {
+            database.ref('pedidos/' + card.id).remove();
+        }
+        else if (target.classList.contains('gerar-pdf-btn')) {
+            const pedido = JSON.parse(card.dataset.pedido);
+            gerarPdf(pedido);
+        }
+    });
+
+    function formatarFormaPagamento(formaPagamento) {
+        if (!formaPagamento) return 'Não Informado';
+        switch (formaPagamento) {
+            case 'pix': return 'Pix';
+            case 'cartao': return 'Cartão de Crédito/Débito';
+            case 'dinheiro': return 'Dinheiro';
+            default: return formaPagamento.toUpperCase();
+        }
+    }
+
+    function gerarPdf(pedido) {
+        const dataPedido = new Date(pedido.timestamp).toLocaleString('pt-BR');
+        const formaPagamento = formatarFormaPagamento(pedido.formaPagamento);
+        const filename = `comprovante_${pedido.cliente}_${new Date().getTime()}.pdf`;
+        let itensTableHtml = `<table style="width:100%; border-collapse: collapse; margin-top: 20px;"><thead><tr style="background-color: #f2f2f2;"><th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Item</th><th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Qtd</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Preço Unit.</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Total</th></tr></thead><tbody>`;
+        pedido.itens.forEach(item => {
+            const itemTotal = (item.preco && item.quantidade) ? `R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+            itensTableHtml += `<tr><td style="padding: 8px; border: 1px solid #ddd; text-align: left;">${item.nome}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.quantidade}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: red; font-weight: bold;">R$ ${item.preco.toFixed(2).replace('.', ',')}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${itemTotal}</td></tr>`;
+        });
+        if (pedido.itensAdicionados) {
+             pedido.itensAdicionados.forEach(item => {
+                const itemTotal = (item.preco && item.quantidade) ? `R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+                itensTableHtml += `<tr><td style="padding: 8px; border: 1px solid #ddd; text-align: left; color: #d9534f;">${item.nome} (Adicionado)</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: #d9534f;">${item.quantidade}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: red; font-weight: bold;">R$ ${item.preco.toFixed(2).replace('.', ',')}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: #d9534f;">${itemTotal}</td></tr>`;
+            });
+        }
+        itensTableHtml += `</tbody></table>`;
+        const invoiceHtml = `<div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 600px; margin: auto;"><h2 style="text-align: center; color: #333;">Comprovante de Pedido</h2><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p><strong>Cliente:</strong> ${pedido.cliente}</p><p><strong>Horário do Pedido:</strong> ${dataPedido}</p><p><strong>Forma de Pagamento:</strong> ${formaPagamento}</p>${itensTableHtml}<p style="text-align: right; font-size: 1.2em; font-weight: bold; margin-top: 20px;">Total Geral: ${pedido.total}</p><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p style="text-align: center; font-size: 0.8em; color: #777;">Obrigado pelo seu pedido!</p></div>`;
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = invoiceHtml;
+        const opt = { margin: 1, filename: filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 4 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
+        html2pdf().set(opt).from(tempDiv).save();
+    }
+
+    function renderizarPedido(pedido, pedidoId, isUpdate) {
         const pedidoDiv = document.createElement('div');
         pedidoDiv.className = 'pedido-card';
         pedidoDiv.id = pedidoId;
+        pedidoDiv.dataset.pedido = JSON.stringify(pedido);
 
-        // Formata a data para ser mais legível
         const dataPedido = new Date(pedido.timestamp).toLocaleString('pt-BR');
-
-        // Monta o HTML interno do cartão
         let itensHtml = '';
         pedido.itens.forEach(item => {
             const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
             itensHtml += `<li>${item.nome} (x${item.quantidade})${subTotal}</li>`;
         });
-
         let itensAdicionadosHtml = '';
         if (pedido.itensAdicionados && pedido.itensAdicionados.length > 0) {
             itensAdicionadosHtml += `<h4 style="margin-top: 8px; margin-bottom: 2px; color: #d9534f;">Itens Adicionados:</h4><ul style="margin-top: 0; margin-bottom: 8px;">`;
@@ -189,129 +212,37 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             itensAdicionadosHtml += `</ul>`;
         }
-
         const [mesaInfo, clienteInfo] = pedido.cliente.split(' - ');
-
-        pedidoDiv.innerHTML = `
-            <h3>${mesaInfo}</h3>
-            <p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p>
-            <p><strong>Horário:</strong> ${dataPedido}</p>
-            <p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>
-            ${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}
-            <ul>${itensHtml}</ul>
-            ${itensAdicionadosHtml}
-            <p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p>
-            <div class="button-container">
-                <button class="concluir-btn">Fechar Conta</button>
-                <button class="concluir-btn gerar-pdf-btn">Gerar Comprovante</button>
-            </div>
-        `;
-
-        // Adiciona o cartão no topo da lista
+        pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}<ul>${itensHtml}</ul>${itensAdicionadosHtml}<p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
         listaPedidosContainer.prepend(pedidoDiv);
 
-        // Aplica a cor da borda apropriada
         if (isUpdate) {
             pedidoDiv.classList.add('pedido-atualizado');
         } else {
             pedidoDiv.classList.add('pedido-novo');
         }
 
-        // Lógica de Animação
-        const pedidoTimestamp = new Date(pedido.timestamp).getTime();
-        // Anima se for uma atualização (isUpdate) ou se o pedido chegou depois da última visita.
-        // Se não houver lastVisitTimestamp (primeira visita), não anima os pedidos antigos.
-        const shouldAnimate = isUpdate || (lastVisitTimestamp && pedidoTimestamp > lastVisitTimestamp);
+        const seenPedidos = getSeenPedidos();
+        const hasBeenSeen = seenPedidos.includes(pedidoId);
+
+        // A animação acontece se for uma atualização ou se o pedido nunca foi visto.
+        const shouldAnimate = isUpdate || !hasBeenSeen;
 
         if (shouldAnimate) {
             pedidoDiv.classList.add('animating');
-            startTitleFlash('*** NOVO PEDIDO ***');
-            const notificationSound = document.getElementById('notificationSound');
-            if (notificationSound) {
-                notificationSound.play().catch(e => console.error("Erro ao tocar o som:", e));
+            const fecharContaBtn = pedidoDiv.querySelector('.concluir-btn');
+            if (fecharContaBtn) {
+                fecharContaBtn.textContent = 'Confirmar Pedido';
+                fecharContaBtn.classList.remove('concluir-btn');
+                fecharContaBtn.classList.add('confirmar-btn');
             }
-
-            // Adiciona listener para remover a animação ao clicar
-            const clickHandler = () => {
-                pedidoDiv.classList.remove('animating');
-                pedidoDiv.removeEventListener('click', clickHandler);
-            };
-            pedidoDiv.addEventListener('click', clickHandler);
+            startTitleFlash('*** NOVO PEDIDO ***');
+            if (userHasInteracted) {
+                const notificationSound = document.getElementById('notificationSound');
+                if (notificationSound) {
+                    notificationSound.play().catch(e => console.error("Erro ao tocar o som:", e));
+                }
+            }
         }
-
-        // Adiciona o listener para o botão de concluir
-        const concluirBtn = pedidoDiv.querySelector('.concluir-btn');
-        concluirBtn.addEventListener('click', () => {
-            // Remove o pedido do banco de dados
-            database.ref('pedidos/' + pedidoId).remove();
-        });
-
-        // Adiciona o listener para o botão de gerar PDF
-        const gerarPdfBtn = pedidoDiv.querySelector('.gerar-pdf-btn');
-        gerarPdfBtn.addEventListener('click', () => {
-            const filename = `comprovante_${pedido.cliente}_${new Date().getTime()}.pdf`;
-
-            let itensTableHtml = `
-                <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
-                    <thead>
-                        <tr style="background-color: #f2f2f2;">
-                            <th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Item</th>
-                            <th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Qtd</th>
-                            <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Preço Unit.</th>
-                            <th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            pedido.itens.forEach(item => {
-                const itemTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
-                itensTableHtml += `
-                    <tr>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: left;">${item.nome}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.quantidade}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: red; font-weight: bold;">R$ ${item.preco.toFixed(2).replace('.', ',')}</td>
-                        <td style="padding: 8px; border: 1px solid #ddd; text-align: right;">R$ ${itemTotal}</td>
-                    </tr>
-                `;
-            });
-
-            itensTableHtml += `
-                    </tbody>
-                </table>
-            `;
-
-            const invoiceHtml = `
-                <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 600px; margin: auto;">
-                    <h2 style="text-align: center; color: #333;">Comprovante de Pedido</h2>
-                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                    <p><strong>Cliente:</strong> ${pedido.cliente}</p>
-                    <p><strong>Horário do Pedido:</strong> ${dataPedido}</p>
-                    <p><strong>Forma de Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>
-                    
-                    ${itensTableHtml}
-
-                    <p style="text-align: right; font-size: 1.2em; font-weight: bold; margin-top: 20px;">
-                        Total Geral: ${pedido.total}
-                    </p>
-                    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-                    <p style="text-align: center; font-size: 0.8em; color: #777;">Obrigado pelo seu pedido!</p>
-                </div>
-            `;
-
-            // Cria um elemento temporário para renderizar o HTML da nota fiscal
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = invoiceHtml;
-
-            const opt = {
-                margin:       1,
-                filename:     filename,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 4 },
-                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-            };
-            html2pdf().set(opt).from(tempDiv).save();
-        });
     }
-
 });

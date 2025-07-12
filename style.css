@@ -305,7 +305,8 @@ aside#carrinho {
     margin-top: 15px;
 }
 
-.button-container .concluir-btn {
+.button-container .concluir-btn,
+.button-container .gerar-pdf-btn {
     flex: 1; /* Faz os botões ocuparem o mesmo espaço */
     margin-top: 0;
 }
@@ -557,8 +558,8 @@ aside#carrinho {
     margin-top: 15px;
 }
 
-.concluir-btn {
-    background-color: #d9534f;
+/* Estilo Base para Botões no Card */
+.card-btn {
     color: white;
     border: none;
     padding: 10px 15px;
@@ -570,6 +571,10 @@ aside#carrinho {
     transition: background-color 0.2s;
 }
 
+.concluir-btn {
+    background-color: #d9534f; /* Vermelho */
+}
+
 .concluir-btn:hover {
     background-color: #c9302c;
 }
@@ -579,7 +584,28 @@ aside#carrinho {
 }
 
 .gerar-pdf-btn:hover {
-    background-color: #4cae4c; /* Verde mais escuro no hover */
+    background-color: #4cae4c;
+}
+
+.confirmar-btn {
+    background-color: #0275d8; /* Azul */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1em;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+}
+
+.confirmar-btn:hover {
+    background-color: #025aa5;
+}
+
+.gerar-pdf-btn:hover {
+    background-color: #c9302c;
 }
 
 /* Estilos da Notificação (Toast) */

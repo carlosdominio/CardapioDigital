@@ -10,7 +10,7 @@
 <body>
     <header>
         <h1>Painel de Administração</h1>
-        <a href="index.html">Ver Cardápio</a>
+        <a href="index.html" class="header-link-btn">Ver Cardápio</a>
     </header>
 
     <main class="admin-main">
@@ -19,8 +19,10 @@
             <h2>Gerenciar Categorias</h2>
             <div class="form-container">
                 <h3>Adicionar Nova Categoria</h3>
-                <input type="text" id="category-name" placeholder="Nome da Categoria" required>
-                <button id="add-category-btn">Adicionar Categoria</button>
+                <div id="add-category-form">
+                    <input type="text" id="category-name" placeholder="Nome da Categoria" required>
+                    <button id="add-category-btn">Adicionar</button>
+                </div>
             </div>
             <div class="list-container">
                 <h3>Categorias Existentes</h3>

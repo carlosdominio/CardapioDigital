@@ -5,14 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Central de Pedidos</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pedidos.css">
 </head>
-<body>
-    <div id="login-container" style="display: block; text-align: center; margin-top: 50px;">
-        <h2>Login da Central de Pedidos</h2>
-        <input type="email" id="login-email" placeholder="Email" style="padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 4px;">
-        <input type="password" id="login-password" placeholder="Senha" style="padding: 10px; margin: 5px; border: 1px solid #ddd; border-radius: 4px;">
-        <button id="login-btn" style="padding: 10px 20px; margin: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Entrar</button>
-        <p id="login-error-message" style="color: red;"></p>
+<body class="login-view">
+    <div id="login-container">
+        <div class="login-form">
+            <h2>Login da Central de Pedidos</h2>
+            <div class="form-group">
+                <input type="email" id="login-email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" id="login-password" placeholder="Senha" required>
+            </div>
+            <button id="login-btn" class="login-btn">Entrar</button>
+            <p id="login-error-message"></p>
+        </div>
     </div>
 
     <div id="app-content" style="display: none;">
@@ -20,9 +27,9 @@
             Clique aqui para ativar os alertas sonoros de novos pedidos.
         </div>
 
-        <header>
+        <header class="pedidos-header">
             <h1>Novos Pedidos</h1>
-            <button id="logout-btn" style="position: absolute; top: 20px; right: 20px; padding: 10px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;">Sair</button>
+            <button id="logout-btn">Sair</button>
         </header>
 
         <main id="lista-pedidos">
