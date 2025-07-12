@@ -186,9 +186,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 delete pedido.itensAdicionados;
                 delete pedido.versao;
-                
                 addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
                 database.ref('pedidos/' + card.id).set(pedido);
+    
+                // Altera os botões imediatamente para feedback visual
+                const buttonContainer = card.querySelector('.button-container');
+                if (buttonContainer) {
+                    buttonContainer.innerHTML = `
+                        <button class="card-btn concluir-btn">Fechar Conta</button>
+                        <button class="card-btn gerar-pdf-btn">Gerar Comprovante</button>
+                    `;
+                }
+    
             }
 
         } else if (target.classList.contains('concluir-btn')) {
