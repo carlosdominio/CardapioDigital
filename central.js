@@ -101,10 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             pedidosRef.on('child_changed', (snapshot) => {
                 const pedidoId = snapshot.key;
-                removePedidoFromSeen(pedidoId);
+                const pedidoData = snapshot.val();
+
+                // Apenas re-ativa a notificação se for uma atualização com novos itens
+                if (pedidoData.itensAdicionados && pedidoData.itensAdicionados.length > 0) {
+                    removePedidoFromSeen(pedidoId);
+                }
+
                 const existingPedidoDiv = document.getElementById(pedidoId);
                 if (existingPedidoDiv) existingPedidoDiv.remove();
-                renderizarPedido(snapshot.val(), pedidoId, true);
+                renderizarPedido(pedidoData, pedidoId, true);
             });
 
             pedidosRef.on('child_removed', (snapshot) => {
@@ -143,13 +149,42 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!card) return;
 
         if (target.classList.contains('confirmar-btn')) {
-            card.classList.remove('animating');
-            addPedidoToSeen(card.id);
-            target.textContent = 'Fechar Conta';
-            target.classList.remove('confirmar-btn');
-            target.classList.add('concluir-btn');
-        }
-        else if (target.classList.contains('concluir-btn')) {
+            card.classList.remove('animating'); // Feedback visual imediato
+            const pedido = JSON.parse(card.dataset.pedido);
+            
+            if (pedido.itensAdicionados) {
+                pedido.itensAdicionados.forEach(itemAdicionado => {
+                    const itemExistente = pedido.itens.find(item => item.id === itemAdicionado.id);
+                    if (itemExistente) {
+                        itemExistente.quantidade += itemAdicionado.quantidade;
+                    } else {
+                        pedido.itens.push(itemAdicionado);
+                    }
+                });
+            }
+            delete pedido.itensAdicionados;
+            
+            addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
+            database.ref('pedidos/' + card.id).set(pedido);
+
+        } else if (target.classList.contains('nao-confirmar-btn')) {
+            card.classList.remove('animating'); // Feedback visual imediato
+            const pedido = JSON.parse(card.dataset.pedido);
+            
+            // Recalcula o total baseado apenas nos itens originais
+            let novoTotal = 0;
+            pedido.itens.forEach(item => {
+                novoTotal += item.preco * item.quantidade;
+            });
+            pedido.total = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`;
+
+            delete pedido.itensAdicionados;
+            delete pedido.versao;
+            
+            addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
+            database.ref('pedidos/' + card.id).set(pedido);
+
+        } else if (target.classList.contains('concluir-btn')) {
             database.ref('pedidos/' + card.id).remove();
         }
         else if (target.classList.contains('gerar-pdf-btn')) {
@@ -225,16 +260,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const seenPedidos = getSeenPedidos();
         const hasBeenSeen = seenPedidos.includes(pedidoId);
 
-        // A animação acontece se for uma atualização ou se o pedido nunca foi visto.
-        const shouldAnimate = isUpdate || !hasBeenSeen;
+        // A animação acontece apenas se o pedido não tiver sido marcado como "visto".
+        const shouldAnimate = !hasBeenSeen;
 
         if (shouldAnimate) {
             pedidoDiv.classList.add('animating');
-            const fecharContaBtn = pedidoDiv.querySelector('.concluir-btn');
-            if (fecharContaBtn) {
-                fecharContaBtn.textContent = 'Confirmar Pedido';
-                fecharContaBtn.classList.remove('concluir-btn');
-                fecharContaBtn.classList.add('confirmar-btn');
+            const buttonContainer = pedidoDiv.querySelector('.button-container');
+            if (buttonContainer) {
+                buttonContainer.innerHTML = `
+                    <button class="card-btn confirmar-btn">Confirmar Pedido</button>
+                    <button class="card-btn nao-confirmar-btn">Não Confirmar</button>
+                `;
             }
             startTitleFlash('*** NOVO PEDIDO ***');
             if (userHasInteracted) {

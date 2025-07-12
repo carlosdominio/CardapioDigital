@@ -604,6 +604,14 @@ aside#carrinho {
     background-color: #025aa5;
 }
 
+.nao-confirmar-btn {
+    background-color: #f44336; /* Vermelho para rejeitar */
+}
+
+.nao-confirmar-btn:hover {
+    background-color: #d32f2f;
+}
+
 .gerar-pdf-btn:hover {
     background-color: #c9302c;
 }
