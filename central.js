@@ -103,7 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const pedidoId = snapshot.key;
                 const pedidoData = snapshot.val();
 
-                // Apenas re-ativa a notificação se for uma atualização com novos itens
+                // Se um pedido for atualizado com novos itens, ele precisa ser "não visto"
+                // para acionar a confirmação novamente.
                 if (pedidoData.itensAdicionados && pedidoData.itensAdicionados.length > 0) {
                     removePedidoFromSeen(pedidoId);
                 }
@@ -163,6 +164,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }
             delete pedido.itensAdicionados;
+
+            // Adiciona um campo para garantir que o Firebase detecte a mudança
+            pedido.confirmado = true;
             
             addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
             database.ref('pedidos/' + card.id).set(pedido);
@@ -188,15 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 delete pedido.versao;
                 addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
                 database.ref('pedidos/' + card.id).set(pedido);
-    
-                // Altera os botões imediatamente para feedback visual
-                const buttonContainer = card.querySelector('.button-container');
-                if (buttonContainer) {
-                    buttonContainer.innerHTML = `
-                        <button class="card-btn concluir-btn">Fechar Conta</button>
-                        <button class="card-btn gerar-pdf-btn">Gerar Comprovante</button>
-                    `;
-                }
     
             }
 
@@ -276,10 +271,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const seenPedidos = getSeenPedidos();
         const hasBeenSeen = seenPedidos.includes(pedidoId);
 
-        // A animação acontece apenas se o pedido não tiver sido marcado como "visto".
-        const shouldAnimate = !hasBeenSeen;
+        // A confirmação é necessária apenas se o pedido não tiver sido marcado como "visto".
+        const needsConfirmation = !hasBeenSeen;
 
-        if (shouldAnimate) {
+        if (needsConfirmation) {
             pedidoDiv.classList.add('animating');
             const buttonContainer = pedidoDiv.querySelector('.button-container');
             if (buttonContainer) {
