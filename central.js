@@ -20,6 +20,60 @@ document.addEventListener('DOMContentLoaded', () => {
     let intervalId = null;
     let userHasInteracted = false;
 
+    // --- LÓGICA DE INATIVIDADE ---
+    let inactivityTimer = null;
+    const INACTIVITY_TIMEOUT = 240000; // 4 minutos
+
+    function showInactivityModal() {
+        // Verifica se já existe um modal para não duplicar
+        if (document.getElementById('inactivity-modal')) return;
+
+        // Verifica se há pedidos pendentes de confirmação
+        const pendingPedidos = document.querySelector('.pedido-card.animating');
+        if (!pendingPedidos) {
+            resetInactivityTimer(); // Se não há pendentes, apenas reinicia o timer
+            return;
+        }
+
+        const modal = document.createElement('div');
+        modal.id = 'inactivity-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+        modal.style.display = 'flex';
+        modal.style.justifyContent = 'center';
+        modal.style.alignItems = 'center';
+        modal.style.zIndex = '1001';
+
+        const modalContent = document.createElement('div');
+        modalContent.style.backgroundColor = '#fff';
+        modalContent.style.padding = '30px';
+        modalContent.style.borderRadius = '8px';
+        modalContent.style.textAlign = 'center';
+        modalContent.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+        modalContent.innerHTML = `
+            <h2 style="margin-top: 0; color: #d9534f;">Atenção</h2>
+            <p>Existem pedidos pendentes de confirmação!</p>
+            <button id="close-inactivity-modal" style="padding: 10px 20px; border: none; border-radius: 5px; background-color: #337ab7; color: white; cursor: pointer;">Entendido</button>
+        `;
+
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+
+        document.getElementById('close-inactivity-modal').addEventListener('click', () => {
+            document.body.removeChild(modal);
+            resetInactivityTimer(); // Reinicia o timer quando o modal é fechado
+        });
+    }
+
+    function resetInactivityTimer() {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(showInactivityModal, INACTIVITY_TIMEOUT);
+    }
+
     // --- LÓGICA DE PEDIDOS VISTOS ---
     const SEEN_PEDIDOS_KEY = 'seenPedidos';
 
@@ -82,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     auth.onAuthStateChanged(user => {
         if (user) {
             toggleContent(true);
+            resetInactivityTimer(); // Inicia o timer de inatividade no login
             if (audioPermissionMessage && notificationSound) {
                 audioPermissionMessage.addEventListener('click', () => {
                     notificationSound.play().then(() => {
@@ -97,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             pedidosRef.on('child_added', (snapshot) => {
                 renderizarPedido(snapshot.val(), snapshot.key, false);
+                resetInactivityTimer();
             });
 
             pedidosRef.on('child_changed', (snapshot) => {
@@ -112,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const existingPedidoDiv = document.getElementById(pedidoId);
                 if (existingPedidoDiv) existingPedidoDiv.remove();
                 renderizarPedido(pedidoData, pedidoId, true);
+                resetInactivityTimer();
             });
 
             pedidosRef.on('child_removed', (snapshot) => {
@@ -151,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (target.classList.contains('confirmar-btn')) {
             card.classList.remove('animating'); // Feedback visual imediato
+            resetInactivityTimer();
             const pedido = JSON.parse(card.dataset.pedido);
             
             if (pedido.itensAdicionados) {
@@ -173,6 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } else if (target.classList.contains('nao-confirmar-btn')) {
             card.classList.remove('animating'); // Feedback visual imediato
+            resetInactivityTimer();
 
             // Se for um pedido novo (não uma atualização), ele deve ser excluído.
             if (card.classList.contains('pedido-novo')) {
