@@ -11,6 +11,7 @@ const loginPasswordInput = document.getElementById('login-password');
 const loginBtn = document.getElementById('login-btn');
 const logoutBtn = document.getElementById('logout-btn');
 const loginErrorMessage = document.getElementById('login-error-message');
+const searchInput = document.getElementById('search-input');
 
 const listaPedidosContainer = document.getElementById('lista-pedidos');
 const audioPermissionMessage = document.getElementById('audio-permission-message');
@@ -209,6 +210,20 @@ loginBtn.addEventListener('click', () => {
 
 logoutBtn.addEventListener('click', () => {
     auth.signOut();
+});
+
+searchInput.addEventListener('input', () => {
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    const pedidos = document.querySelectorAll('.pedido-card');
+
+    pedidos.forEach(pedido => {
+        const pedidoText = pedido.textContent.toLowerCase();
+        if (pedidoText.includes(searchTerm)) {
+            pedido.style.display = 'flex';
+        } else {
+            pedido.style.display = 'none';
+        }
+    });
 });
 
 listaPedidosContainer.addEventListener('click', (event) => {

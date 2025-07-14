@@ -76,9 +76,35 @@ body.login-view > #app-content {
 
 .pedidos-header {
     position: relative;
-    text-align: center;
+    position: relative; /* Para posicionar o botão de sair */
     padding: 20px 10px;
     border-bottom: 1px solid #eee;
+    display: flex;
+    flex-direction: column; /* Empilha os itens verticalmente */
+    align-items: center;   /* Centraliza horizontalmente */
+    gap: 15px;
+}
+
+.search-container {
+    width: 100%; /* Ocupa a largura para centralizar o input */
+    display: flex;
+    justify-content: center;
+}
+
+#search-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 1em;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#search-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 .pedidos-header h1 {
