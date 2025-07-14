@@ -43,7 +43,20 @@
 
     <script src="firebase-config.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <script src="central.js"></script>
     <audio id="notificationSound" src="notification.mp3" preload="auto"></audio>
+
+    <!-- Modal de Confirmação de Recusa -->
+    <div id="recusar-confirm-modal" class="recusa-modal-overlay">
+        <div class="modal-content">
+            <h2>Confirmar Recusa</h2>
+            <p>Você tem certeza de que deseja recusar este pedido? Esta ação não pode ser desfeita.</p>
+            <div class="modal-buttons">
+                <button id="confirm-recusar-btn" class="btn-danger">Sim, Recusar</button>
+                <button id="cancel-recusar-btn" class="btn-secondary">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="central.js"></script>
 </body>
 </html>
