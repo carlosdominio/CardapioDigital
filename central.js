@@ -16,8 +16,12 @@ const searchInput = document.getElementById('search-input');
 const pendentesContainer = document.getElementById('pendentes');
 const confirmadosContainer = document.getElementById('confirmados');
 const tabsContainer = document.querySelector('.tabs-container');
-const audioPermissionMessage = document.getElementById('audio-permission-message');
 const notificationSound = document.getElementById('notificationSound');
+
+// Elementos do Modal de Ativação de Som
+const audioModal = document.getElementById('audio-activation-modal');
+const activateSoundBtn = document.getElementById('activate-sound-btn');
+const skipSoundBtn = document.getElementById('skip-sound-btn');
 
 // Elementos do Modal de Recusa
 let pedidoParaRecusar = null; // Armazena o card do pedido a ser recusado
@@ -206,18 +210,11 @@ auth.onAuthStateChanged(user => {
     if (user) {
         toggleContent(true);
         resetInactivityTimer(); // Inicia o timer de inatividade no login
-        if (audioPermissionMessage && notificationSound) {
-            audioPermissionMessage.addEventListener('click', () => {
-                notificationSound.play().then(() => {
-                    userHasInteracted = true;
-                    audioPermissionMessage.style.display = 'none';
-                }).catch(e => {
-                    console.error("Erro ao tentar tocar o som na interação inicial:", e);
-                    userHasInteracted = true;
-                    audioPermissionMessage.style.display = 'none';
-                });
-            });
-        }
+        
+        // Mostra o modal de ativação de som após um pequeno delay
+        setTimeout(() => {
+            showAudioActivationModal();
+        }, 1000);
 
         pedidosRef.on('child_added', (snapshot) => {
             renderizarPedido(snapshot.val(), snapshot.key, false);
@@ -535,4 +532,57 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
             }
         }
     }
+}
+
+// --- LÓGICA DO MODAL DE ATIVAÇÃO DE SOM ---
+
+function showAudioActivationModal() {
+    // Verifica se o usuário já interagiu (evita mostrar o modal novamente)
+    if (userHasInteracted || !audioModal) return;
+    
+    audioModal.classList.add('show');
+}
+
+function hideAudioActivationModal() {
+    if (audioModal) {
+        audioModal.classList.remove('show');
+    }
+}
+
+function activateSound() {
+    if (notificationSound) {
+        notificationSound.play().then(() => {
+            userHasInteracted = true;
+            hideAudioActivationModal();
+            console.log("Som ativado com sucesso!");
+        }).catch(e => {
+            console.error("Erro ao tentar ativar o som:", e);
+            userHasInteracted = true;
+            hideAudioActivationModal();
+        });
+    }
+}
+
+function skipSound() {
+    userHasInteracted = true;
+    hideAudioActivationModal();
+    console.log("Ativação de som foi pulada pelo usuário");
+}
+
+// Event listeners para o modal de ativação de som
+if (activateSoundBtn) {
+    activateSoundBtn.addEventListener('click', activateSound);
+}
+
+if (skipSoundBtn) {
+    skipSoundBtn.addEventListener('click', skipSound);
+}
+
+// Fecha o modal se clicar fora dele
+if (audioModal) {
+    audioModal.addEventListener('click', (event) => {
+        if (event.target === audioModal) {
+            skipSound();
+        }
+    });
 }

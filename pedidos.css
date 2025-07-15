@@ -151,6 +151,118 @@ body.login-view > #app-content {
     }
 }
 /* =================================
+   Estilos do Modal de Ativação de Som
+   ================================= */
+
+.audio-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.audio-modal-overlay.show {
+    display: flex;
+}
+
+.audio-modal-content {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    text-align: center;
+    max-width: 450px;
+    width: 90%;
+    animation: slideIn 0.3s ease-out;
+}
+
+.audio-modal-icon {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.audio-modal-content h2 {
+    margin: 0 0 15px 0;
+    color: #333;
+    font-size: 1.5em;
+}
+
+.audio-modal-content p {
+    margin-bottom: 15px;
+    color: #666;
+    line-height: 1.5;
+    font-size: 1em;
+}
+
+.audio-modal-subtitle {
+    font-size: 0.9em !important;
+    color: #888 !important;
+    font-style: italic;
+    margin-bottom: 25px !important;
+}
+
+.audio-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.audio-modal-buttons button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 120px;
+    justify-content: center;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #545b62;
+    transform: translateY(-1px);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* =================================
    Estilos do Modal de Confirmação
    ================================= */
 

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="pedidos.css">
 </head>
+
 <body class="login-view">
     <div id="login-container">
         <div class="login-form">
@@ -23,9 +25,6 @@
     </div>
 
     <div id="app-content" style="display: none;">
-        <div id="audio-permission-message" style="text-align: center; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404; cursor: pointer;">
-            Clique aqui para ativar os alertas sonoros de novos pedidos.
-        </div>
 
         <header class="pedidos-header">
             <h1>Novos Pedidos</h1>
@@ -58,6 +57,31 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <audio id="notificationSound" src="notification.mp3" preload="auto"></audio>
 
+    <!-- Modal de Ativação de Som -->
+    <div id="audio-activation-modal" class="audio-modal-overlay">
+        <div class="audio-modal-content">
+            <div class="audio-modal-icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#007bff" stroke-width="2">
+                    <polygon points="11 5,6 9,2 9,2 15,6 15,11 19,11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.08"></path>
+                </svg>
+            </div>
+            <h2>Ativar Notificações Sonoras</h2>
+            <p>Para receber alertas sonoros quando chegarem novos pedidos, clique no botão abaixo.</p>
+            <p class="audio-modal-subtitle">Isso ajudará você a não perder nenhum pedido!</p>
+            <div class="audio-modal-buttons">
+                <button id="activate-sound-btn" class="btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5,6 9,2 9,2 15,6 15,11 19,11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.08"></path>
+                    </svg>
+                    Ativar Som
+                </button>
+                <button id="skip-sound-btn" class="btn-secondary">Pular</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Confirmação de Recusa -->
     <div id="recusar-confirm-modal" class="recusa-modal-overlay">
         <div class="modal-content">
@@ -72,4 +96,5 @@
 
     <script src="central.js"></script>
 </body>
+
 </html>
