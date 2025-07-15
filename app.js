@@ -390,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { value: nomeCliente, confirmed: nomeConfirmed } = await showModal({
             title: 'Identificação', text: 'Por favor, digite seu nome:', inputType: 'text', inputPlaceholder: 'Seu Nome',
             confirmText: 'Avançar', cancelText: 'Cancelar',
-            validation: val => /^[a-zA-Z\s]+$/.test(val) && val.trim() !== '',
+            validation: val => /^[\p{L}\s'-]+$/u.test(val) && val.trim() !== '',
             errorMessage: 'Por favor, digite um nome válido (apenas letras).'
         });
         if (!nomeConfirmed) return;
@@ -453,23 +453,38 @@ document.addEventListener('DOMContentLoaded', () => {
         carrinho.forEach(itemNoCarrinho => {
             const { id, quantidade, categoryKey } = itemNoCarrinho;
 
-            if (!categoryKey) {
-                console.error(`Item ${id} no carrinho não tem uma categoryKey.`);
+            if (!categoryKey || !id) {
+                console.error(`Item inválido no carrinho, não foi possível dar baixa no estoque:`, itemNoCarrinho);
                 return;
             }
 
-            const itemRefPath = `menu/${categoryKey}/itens/${id}`;
-            const itemOriginal = cardapioCompleto[categoryKey]?.itens?.[id];
+            const itemEstoqueRef = database.ref(`menu/${categoryKey}/itens/${id}/estoque`);
 
-            if (itemOriginal) {
-                const novoEstoque = itemOriginal.estoque - quantidade;
-                database.ref(itemRefPath).child('estoque').set(novoEstoque)
-                    .catch(error => {
-                        console.error(`Erro ao atualizar estoque para o item ${itemNoCarrinho.nome}:`, error);
-                    });
-            } else {
-                console.error(`Não foi possível encontrar o item original no cardápio para dar baixa no estoque: ${id}`);
-            }
+            itemEstoqueRef.transaction((currentStock) => {
+                // Se o item foi removido do cardápio enquanto o usuário comprava, currentStock será null.
+                if (currentStock === null) {
+                    return 0;
+                }
+
+                // Se o estoque for suficiente, subtrai a quantidade.
+                if (currentStock >= quantidade) {
+                    return currentStock - quantidade;
+                } else {
+                    // Se o estoque for insuficiente, a transação é abortada ao retornar undefined.
+                    // Isso previne a venda de um item sem estoque.
+                    console.warn(`Tentativa de compra do item ${id} com estoque insuficiente. Transação abortada.`);
+                    return; // Aborta a transação
+                }
+            }, (error, committed, snapshot) => {
+                if (error) {
+                    console.error(`Erro na transação de estoque para o item ${id}:`, error);
+                } else if (!committed) {
+                    // Este bloco é executado se a transação foi abortada (retornando undefined).
+                    console.warn(`A transação de estoque para o item ${id} não foi concluída (provavelmente por estoque insuficiente).`);
+                    // O ideal seria notificar o usuário que um item específico não pôde ser comprado.
+                    // Por simplicidade, no momento, a notificação não será implementada.
+                }
+            });
         });
     }
 });
