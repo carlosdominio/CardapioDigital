@@ -168,17 +168,28 @@ auth.onAuthStateChanged(user => {
 
         pedidosRef.on('child_changed', (snapshot) => {
             const pedidoId = snapshot.key;
-            const pedidoData = snapshot.val();
+            let newPedidoData = snapshot.val(); // Usar let para permitir modificação
+
+            const existingPedidoDiv = document.getElementById(pedidoId);
+
+            // Se o card existente na tela já tinha itens pendentes, acumula com os novos.
+            if (existingPedidoDiv && newPedidoData.itensAdicionados && newPedidoData.itensAdicionados.length > 0) {
+                const oldPedidoData = JSON.parse(existingPedidoDiv.dataset.pedido);
+                if (oldPedidoData.itensAdicionados && oldPedidoData.itensAdicionados.length > 0) {
+                    // Acumula os itens pendentes antigos com os novos
+                    newPedidoData.itensAdicionados = [...oldPedidoData.itensAdicionados, ...newPedidoData.itensAdicionados];
+                }
+            }
 
             // Se um pedido for atualizado com novos itens, ele precisa ser "não visto"
             // para acionar a confirmação novamente.
-            if (pedidoData.itensAdicionados && pedidoData.itensAdicionados.length > 0) {
+            const needsReconfirmation = newPedidoData.itensAdicionados && newPedidoData.itensAdicionados.length > 0;
+            if (needsReconfirmation) {
                 removePedidoFromSeen(pedidoId);
             }
 
-            const existingPedidoDiv = document.getElementById(pedidoId);
             if (existingPedidoDiv) existingPedidoDiv.remove();
-            renderizarPedido(pedidoData, pedidoId, true);
+            renderizarPedido(newPedidoData, pedidoId, true);
             resetInactivityTimer();
         });
 
@@ -328,9 +339,23 @@ function formatarFormaPagamento(formaPagamento) {
 }
 
 function gerarPdf(pedido) {
-    const dataPedido = new Date(pedido.timestamp).toLocaleString('pt-BR');
+    const [mesaInfo, clienteInfo] = pedido.cliente.split(' - ');
+    const pedidoDate = new Date(pedido.timestamp);
+    const dataFormatada = pedidoDate.toLocaleDateString('pt-BR');
+    const horarioFormatado = pedidoDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     const formaPagamento = formatarFormaPagamento(pedido.formaPagamento);
     const filename = `comprovante_${pedido.cliente}_${new Date().getTime()}.pdf`;
+
+    const infoSection = `
+        <div style="margin-bottom: 20px; text-align: left;">
+            <p style="margin: 5px 0;"><strong>Mesa:</strong> ${mesaInfo || 'Não informado'}</p>
+            <p style="margin: 5px 0;"><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p>
+            <p style="margin: 5px 0;"><strong>Horário do Pedido:</strong> ${horarioFormatado}</p>
+            <p style="margin: 5px 0;"><strong>Data:</strong> ${dataFormatada}</p>
+            <p style="margin: 5px 0;"><strong>Forma de Pagamento:</strong> ${formaPagamento}</p>
+        </div>
+    `;
+
     let itensTableHtml = `<table style="width:100%; border-collapse: collapse; margin-top: 20px;"><thead><tr style="background-color: #f2f2f2;"><th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Item</th><th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Qtd</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Preço Unit.</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Total</th></tr></thead><tbody>`;
     pedido.itens.forEach(item => {
         const itemTotal = (item.preco && item.quantidade) ? `R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
@@ -343,7 +368,7 @@ function gerarPdf(pedido) {
         });
     }
     itensTableHtml += `</tbody></table>`;
-    const invoiceHtml = `<div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 600px; margin: auto;"><h2 style="text-align: center; color: #333;">Comprovante de Pedido</h2><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p><strong>Cliente:</strong> ${pedido.cliente}</p><p><strong>Horário do Pedido:</strong> ${dataPedido}</p><p><strong>Forma de Pagamento:</strong> ${formaPagamento}</p>${itensTableHtml}<p style="text-align: right; font-size: 1.2em; font-weight: bold; margin-top: 20px;">Total Geral: ${pedido.total}</p><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p style="text-align: center; font-size: 0.8em; color: #777;">Obrigado pelo seu pedido!</p></div>`;
+    const invoiceHtml = `<div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 600px; margin: auto;"><h2 style="text-align: center; color: #333;">Comprovante de Pedido</h2><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">${infoSection}${itensTableHtml}<p style="text-align: right; font-size: 1.2em; font-weight: bold; margin-top: 20px;">Total Geral: ${pedido.total}</p><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p style="text-align: center; font-size: 0.8em; color: #777;">Obrigado pelo seu pedido!</p></div>`;
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = invoiceHtml;
     const opt = { margin: 1, filename: filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 4 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
