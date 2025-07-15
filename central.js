@@ -39,8 +39,11 @@ function showInactivityModal() {
         return;
     }
 
-    // Extrai os nomes das mesas pendentes, garantindo que sejam únicos
-    const mesasPendentes = [...new Set(Array.from(pendingPedidos).map(card => card.querySelector('h3').textContent))];
+    // Extrai os códigos das mesas pendentes, garantindo que sejam únicos
+    const mesasPendentes = [...new Set(Array.from(pendingPedidos).map(card => {
+        const pedido = JSON.parse(card.dataset.pedido);
+        return pedido.mesaCode || card.querySelector('h3').textContent; // Fallback para o nome da mesa se o código não existir
+    }))];
     const mesasText = mesasPendentes.join(', ');
 
     const modal = document.createElement('div');
