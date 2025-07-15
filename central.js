@@ -13,7 +13,9 @@ const logoutBtn = document.getElementById('logout-btn');
 const loginErrorMessage = document.getElementById('login-error-message');
 const searchInput = document.getElementById('search-input');
 
-const listaPedidosContainer = document.getElementById('lista-pedidos');
+const pendentesContainer = document.getElementById('pendentes');
+const confirmadosContainer = document.getElementById('confirmados');
+const tabsContainer = document.querySelector('.tabs-container');
 const audioPermissionMessage = document.getElementById('audio-permission-message');
 const notificationSound = document.getElementById('notificationSound');
 
@@ -261,7 +263,22 @@ auth.onAuthStateChanged(user => {
     } else {
         toggleContent(false);
         pedidosRef.off();
-        listaPedidosContainer.innerHTML = '';
+        if(pendentesContainer) pendentesContainer.innerHTML = '';
+        if(confirmadosContainer) confirmadosContainer.innerHTML = '';
+    }
+});
+
+tabsContainer.addEventListener('click', (e) => {
+    if (e.target.classList.contains('tab-link')) {
+        const tabId = e.target.dataset.tab;
+
+        // Remove active class from all tab links and contents
+        document.querySelectorAll('.tab-link').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        // Add active class to the clicked tab and corresponding content
+        e.target.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
     }
 });
 
@@ -297,7 +314,7 @@ searchInput.addEventListener('input', () => {
     });
 });
 
-listaPedidosContainer.addEventListener('click', (event) => {
+document.querySelector('main').addEventListener('click', (event) => {
     const target = event.target;
     const card = target.closest('.pedido-card');
     if (!card) return;
@@ -483,7 +500,16 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     }
     const [mesaInfo, clienteInfo] = pedido.cliente.split(' - ');
     pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}<ul>${itensHtml}</ul>${itensAdicionadosHtml}<p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
-    listaPedidosContainer.prepend(pedidoDiv);
+    
+    const seenPedidos = getSeenPedidos();
+    const hasBeenSeen = seenPedidos.includes(pedidoId);
+    const needsConfirmation = !hasBeenSeen;
+
+    if (needsConfirmation) {
+        pendentesContainer.prepend(pedidoDiv);
+    } else {
+        confirmadosContainer.prepend(pedidoDiv);
+    }
 
     // Lógica de classe baseada no histórico de confirmação para garantir a cor correta
     if (isOrderConfirmed(pedidoId)) {
@@ -491,12 +517,6 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     } else {
         pedidoDiv.classList.add('pedido-novo'); // Verde para novos
     }
-
-    const seenPedidos = getSeenPedidos();
-    const hasBeenSeen = seenPedidos.includes(pedidoId);
-
-    // A confirmação é necessária apenas se o pedido não tiver sido marcado como "visto".
-    const needsConfirmation = !hasBeenSeen;
 
     if (needsConfirmation) {
         pedidoDiv.classList.add('animating');

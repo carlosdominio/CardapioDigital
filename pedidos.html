@@ -35,8 +35,18 @@
             <button id="logout-btn">Sair</button>
         </header>
 
-        <main id="lista-pedidos">
-            <!-- Os novos pedidos aparecerão aqui em tempo real -->
+        <div class="tabs-container">
+            <button class="tab-link active" data-tab="pendentes">Pendentes</button>
+            <button class="tab-link" data-tab="confirmados">Confirmados</button>
+        </div>
+
+        <main>
+            <div id="pendentes" class="tab-content active">
+                <!-- Pedidos pendentes de confirmação -->
+            </div>
+            <div id="confirmados" class="tab-content">
+                <!-- Pedidos já confirmados -->
+            </div>
         </main>
     </div>
 
