@@ -482,10 +482,11 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}<ul>${itensHtml}</ul>${itensAdicionadosHtml}<p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
     listaPedidosContainer.prepend(pedidoDiv);
 
-    if (isUpdate) {
-        pedidoDiv.classList.add('pedido-atualizado');
+    // Lógica de classe baseada no histórico de confirmação para garantir a cor correta
+    if (isOrderConfirmed(pedidoId)) {
+        pedidoDiv.classList.add('pedido-atualizado'); // Vermelho para atualizações
     } else {
-        pedidoDiv.classList.add('pedido-novo');
+        pedidoDiv.classList.add('pedido-novo'); // Verde para novos
     }
 
     const seenPedidos = getSeenPedidos();
