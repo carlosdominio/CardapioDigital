@@ -32,12 +32,16 @@ function showInactivityModal() {
     // Verifica se já existe um modal para não duplicar
     if (document.getElementById('inactivity-modal')) return;
 
-    // Verifica se há pedidos pendentes de confirmação
-    const pendingPedidos = document.querySelector('.pedido-card.animating');
-    if (!pendingPedidos) {
+    // Encontra todos os pedidos pendentes
+    const pendingPedidos = document.querySelectorAll('.pedido-card.animating');
+    if (pendingPedidos.length === 0) {
         resetInactivityTimer(); // Se não há pendentes, apenas reinicia o timer
         return;
     }
+
+    // Extrai os nomes das mesas pendentes, garantindo que sejam únicos
+    const mesasPendentes = [...new Set(Array.from(pendingPedidos).map(card => card.querySelector('h3').textContent))];
+    const mesasText = mesasPendentes.join(', ');
 
     const modal = document.createElement('div');
     modal.id = 'inactivity-modal';
@@ -68,7 +72,8 @@ function showInactivityModal() {
         </div>
         <h2 style="margin-top: 0; color: #d9534f;">Atenção</h2>
         <p>Existem pedidos pendentes de confirmação!</p>
-        <button id="close-inactivity-modal" style="padding: 10px 20px; border: none; border-radius: 5px; background-color: #337ab7; color: white; cursor: pointer;">Entendido</button>
+        <p style="font-weight: bold; font-size: 1.1em; color: #333; margin-top: 10px;">Mesas: ${mesasText}</p>
+        <button id="close-inactivity-modal" style="padding: 10px 20px; border: none; border-radius: 5px; background-color: #337ab7; color: white; cursor: pointer; margin-top: 15px;">Entendido</button>
     `;
 
     modal.appendChild(modalContent);
@@ -108,6 +113,54 @@ function removePedidoFromSeen(pedidoId) {
         seen.splice(index, 1);
         localStorage.setItem(SEEN_PEDIDOS_KEY, JSON.stringify(seen));
     }
+}
+
+// --- LÓGICA DE ITENS PENDENTES (SESSION STORAGE) ---
+function getPendingItems(pedidoId) {
+    const pending = sessionStorage.getItem(`pending_${pedidoId}`);
+    return pending ? JSON.parse(pending) : [];
+}
+
+function savePendingItems(pedidoId, items) {
+    sessionStorage.setItem(`pending_${pedidoId}`, JSON.stringify(items));
+}
+
+function clearPendingItems(pedidoId) {
+    sessionStorage.removeItem(`pending_${pedidoId}`);
+}
+
+// --- LÓGICA DE PEDIDOS CONFIRMADOS (LOCALSTORAGE) ---
+const CONFIRMED_ORDERS_KEY = 'confirmedOrders';
+
+function getConfirmedOrders() {
+    const confirmed = localStorage.getItem(CONFIRMED_ORDERS_KEY);
+    return confirmed ? JSON.parse(confirmed) : [];
+}
+
+function addOrderToConfirmed(pedidoId) {
+    const confirmed = getConfirmedOrders();
+    if (!confirmed.includes(pedidoId)) {
+        confirmed.push(pedidoId);
+        localStorage.setItem(CONFIRMED_ORDERS_KEY, JSON.stringify(confirmed));
+        console.log(`Pedido ${pedidoId} adicionado ao histórico de confirmados. Histórico agora:`, JSON.stringify(confirmed));
+    }
+}
+
+function removeOrderFromConfirmed(pedidoId) {
+    let confirmed = getConfirmedOrders();
+    const index = confirmed.indexOf(pedidoId);
+    if (index > -1) {
+        confirmed.splice(index, 1);
+        localStorage.setItem(CONFIRMED_ORDERS_KEY, JSON.stringify(confirmed));
+        console.log(`Pedido ${pedidoId} removido do histórico de confirmados. Histórico agora:`, JSON.stringify(confirmed));
+    }
+}
+
+function isOrderConfirmed(pedidoId) {
+    const confirmed = getConfirmedOrders();
+    const isConfirmed = confirmed.includes(pedidoId);
+    console.log(`Verificando se o pedido ${pedidoId} está confirmado. Histórico:`, JSON.stringify(confirmed), `Resultado: ${isConfirmed}`);
+    return isConfirmed;
 }
 
 // --- FUNÇÕES DE NOTIFICAÇÃO NO TÍTULO ---
@@ -168,34 +221,38 @@ auth.onAuthStateChanged(user => {
 
         pedidosRef.on('child_changed', (snapshot) => {
             const pedidoId = snapshot.key;
-            let newPedidoData = snapshot.val(); // Usar let para permitir modificação
+            let newPedidoData = snapshot.val();
 
-            const existingPedidoDiv = document.getElementById(pedidoId);
-
-            // Se o card existente na tela já tinha itens pendentes, acumula com os novos.
-            if (existingPedidoDiv && newPedidoData.itensAdicionados && newPedidoData.itensAdicionados.length > 0) {
-                const oldPedidoData = JSON.parse(existingPedidoDiv.dataset.pedido);
-                if (oldPedidoData.itensAdicionados && oldPedidoData.itensAdicionados.length > 0) {
-                    // Acumula os itens pendentes antigos com os novos
-                    newPedidoData.itensAdicionados = [...oldPedidoData.itensAdicionados, ...newPedidoData.itensAdicionados];
-                }
+            // Acumula itens pendentes usando sessionStorage
+            if (newPedidoData.itensAdicionados && newPedidoData.itensAdicionados.length > 0) {
+                const existingPending = getPendingItems(pedidoId);
+                const combinedPending = [...existingPending, ...newPedidoData.itensAdicionados];
+                savePendingItems(pedidoId, combinedPending);
             }
 
-            // Se um pedido for atualizado com novos itens, ele precisa ser "não visto"
-            // para acionar a confirmação novamente.
-            const needsReconfirmation = newPedidoData.itensAdicionados && newPedidoData.itensAdicionados.length > 0;
-            if (needsReconfirmation) {
+            // Força a reconfirmação se houver itens pendentes
+            if (getPendingItems(pedidoId).length > 0) {
                 removePedidoFromSeen(pedidoId);
             }
 
+            const existingPedidoDiv = document.getElementById(pedidoId);
             if (existingPedidoDiv) existingPedidoDiv.remove();
             renderizarPedido(newPedidoData, pedidoId, true);
             resetInactivityTimer();
         });
 
         pedidosRef.on('child_removed', (snapshot) => {
-            const pedidoDiv = document.getElementById(snapshot.key);
-            if (pedidoDiv) pedidoDiv.remove();
+            const pedidoId = snapshot.key;
+            console.log(`Recebido evento 'child_removed' para o pedido: ${pedidoId}`);
+            const pedidoDiv = document.getElementById(pedidoId);
+            if (pedidoDiv) {
+                pedidoDiv.remove();
+                // Limpa todos os dados armazenados localmente para este pedido
+                removePedidoFromSeen(pedidoId);
+                clearPendingItems(pedidoId);
+                removeOrderFromConfirmed(pedidoId);
+                console.log(`Dados locais limpos para o pedido: ${pedidoId}`);
+            }
         });
 
     } else {
@@ -262,7 +319,9 @@ listaPedidosContainer.addEventListener('click', (event) => {
         // Adiciona um campo para garantir que o Firebase detecte a mudança
         pedido.confirmado = true;
         
+        addOrderToConfirmed(card.id); // Marca que este pedido já foi confirmado uma vez
         addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
+        clearPendingItems(card.id); // Limpa os itens pendentes da sessão
         database.ref('pedidos/' + card.id).set(pedido);
 
     } else if (target.classList.contains('nao-confirmar-btn')) {
@@ -289,29 +348,46 @@ function handleRecusarPedido() {
     if (!pedidoParaRecusar) return;
 
     const card = pedidoParaRecusar;
-    card.classList.remove('animating'); // Feedback visual imediato
+    const pedido = JSON.parse(card.dataset.pedido);
+
+    card.classList.remove('animating');
     resetInactivityTimer();
 
-    // Se for um pedido novo (não uma atualização), ele deve ser excluído.
-    if (card.classList.contains('pedido-novo')) {
-        database.ref('pedidos/' + card.id).remove();
-    } else {
-        // Se for uma atualização de um pedido existente, reverte as alterações.
-        const pedido = JSON.parse(card.dataset.pedido);
+    // Limpa os itens pendentes da sessão ANTES de qualquer operação de banco de dados
+    clearPendingItems(card.id);
+
+    // Lógica robusta baseada no estado local (localStorage)
+    if (isOrderConfirmed(card.id)) {
+        // Pedido existente: reverte as alterações usando .update() para não tocar no timestamp.
         
-        // Recalcula o total baseado apenas nos itens originais
+        // Recalcula o total com base nos itens já confirmados.
         let novoTotal = 0;
         pedido.itens.forEach(item => {
-            novoTotal += item.preco * item.quantidade;
+            novoTotal += (item.preco * item.quantidade);
         });
-        pedido.total = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`;
+        const novoTotalString = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`;
 
-        delete pedido.itensAdicionados;
-        delete pedido.versao;
-        addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
-        database.ref('pedidos/' + card.id).set(pedido);
+        // Cria um objeto de atualização para o Firebase.
+        // Passar `null` para uma chave a remove do banco de dados.
+        const updates = {
+            total: novoTotalString,
+            itensAdicionados: null,
+            versao: null
+        };
+        
+        // Marca como "visto" para remover os botões de confirmação.
+        addPedidoToSeen(card.id);
+        
+        console.log("O pedido foi confirmado. Atualizando com os seguintes dados:", JSON.stringify(updates));
+        // Salva o estado revertido no Firebase usando update().
+        database.ref('pedidos/' + card.id).update(updates);
+
+    } else {
+        console.log("O pedido NÃO foi confirmado antes. Removendo o pedido inteiro:", card.id);
+        // Pedido novo: a recusa significa que o pedido inteiro é removido.
+        database.ref('pedidos/' + card.id).remove();
     }
-    
+
     closeRecusarModal();
 }
 
@@ -376,6 +452,12 @@ function gerarPdf(pedido) {
 }
 
 function renderizarPedido(pedido, pedidoId, isUpdate) {
+    // Restaura itens pendentes do sessionStorage para garantir a persistência
+    const pendingItems = getPendingItems(pedidoId);
+    if (pendingItems.length > 0) {
+        pedido.itensAdicionados = pendingItems;
+    }
+
     const pedidoDiv = document.createElement('div');
     pedidoDiv.className = 'pedido-card';
     pedidoDiv.id = pedidoId;
