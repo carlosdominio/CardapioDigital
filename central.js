@@ -386,8 +386,10 @@ document.querySelector('main').addEventListener('click', (event) => {
         }
         delete pedido.itensAdicionados;
 
-        // Adiciona um campo para garantir que o Firebase detecte a mudança
+        // Adiciona campos para garantir que o Firebase detecte a mudança e persista o estado
         pedido.confirmado = true;
+        pedido.jaConfirmado = true; // Campo permanente para indicar que já foi confirmado
+        pedido.dataConfirmacao = new Date().toISOString(); // Timestamp da confirmação
         
         addOrderToConfirmed(card.id); // Marca que este pedido já foi confirmado uma vez
         addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
@@ -555,9 +557,19 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     const [mesaInfo, clienteInfo] = pedido.cliente.split(' - ');
     pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}<ul>${itensHtml}</ul>${itensAdicionadosHtml}<p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
     
+    // Verifica se o pedido já foi confirmado (tanto no localStorage quanto no Firebase)
     const seenPedidos = getSeenPedidos();
     const hasBeenSeen = seenPedidos.includes(pedidoId);
-    const needsConfirmation = !hasBeenSeen;
+    const wasConfirmedInFirebase = pedido.jaConfirmado === true || pedido.confirmado === true;
+    
+    // Se foi confirmado no Firebase mas não está no localStorage, adiciona
+    if (wasConfirmedInFirebase && !hasBeenSeen) {
+        addPedidoToSeen(pedidoId);
+        addOrderToConfirmed(pedidoId);
+        console.log(`Sincronizando pedido ${pedidoId} que foi confirmado no Firebase`);
+    }
+    
+    const needsConfirmation = !hasBeenSeen && !wasConfirmedInFirebase;
 
     if (needsConfirmation) {
         pendentesContainer.prepend(pedidoDiv);
