@@ -568,18 +568,25 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     const seenPedidos = getSeenPedidos();
     const hasBeenSeen = seenPedidos.includes(pedidoId);
     const wasConfirmedInFirebase = pedido.jaConfirmado === true || pedido.confirmado === true;
+    const hasNewItems = pedido.itensAdicionados && pedido.itensAdicionados.length > 0;
     
     // Se foi confirmado no Firebase mas não está no localStorage, adiciona
-    if (wasConfirmedInFirebase && !hasBeenSeen) {
+    if (wasConfirmedInFirebase && !hasBeenSeen && !hasNewItems) {
         addPedidoToSeen(pedidoId);
         addOrderToConfirmed(pedidoId);
         console.log(`Sincronizando pedido ${pedidoId} que foi confirmado no Firebase`);
     }
     
-    const needsConfirmation = !hasBeenSeen && !wasConfirmedInFirebase;
+    // NOVA LÓGICA: Pedidos com itens adicionados sempre precisam de confirmação
+    const needsConfirmation = (!hasBeenSeen && !wasConfirmedInFirebase) || hasNewItems;
 
     if (needsConfirmation) {
         pendentesContainer.prepend(pedidoDiv);
+        // Se tem itens novos, remove da lista de "vistos" para forçar reconfirmação
+        if (hasNewItems) {
+            removePedidoFromSeen(pedidoId);
+            console.log(`Pedido ${pedidoId} movido para pendentes devido a itens adicionados`);
+        }
     } else {
         confirmadosContainer.prepend(pedidoDiv);
     }
