@@ -17,6 +17,7 @@ const pendentesContainer = document.getElementById('pendentes');
 const confirmadosContainer = document.getElementById('confirmados');
 const tabsContainer = document.querySelector('.tabs-container');
 const notificationSound = document.getElementById('notificationSound');
+const contadorPendentes = document.getElementById('contador-pendentes');
 
 // Elementos do Modal de Ativação de Som
 const audioModal = document.getElementById('audio-activation-modal');
@@ -172,6 +173,24 @@ function isOrderConfirmed(pedidoId) {
     return isConfirmed;
 }
 
+// --- FUNÇÃO PARA ATUALIZAR CONTADOR DE PEDIDOS PENDENTES ---
+function atualizarContadorPendentes() {
+    if (!contadorPendentes) return;
+    
+    // Conta todos os pedidos que estão na aba pendentes (com classe animating)
+    const pedidosPendentes = document.querySelectorAll('.pedido-card.animating');
+    const quantidade = pedidosPendentes.length;
+    
+    contadorPendentes.textContent = quantidade;
+    
+    // Oculta o contador se não houver pedidos pendentes
+    if (quantidade === 0) {
+        contadorPendentes.style.display = 'none';
+    } else {
+        contadorPendentes.style.display = 'inline-block';
+    }
+}
+
 // --- FUNÇÕES DE NOTIFICAÇÃO NO TÍTULO ---
 function startTitleFlash(message) {
     if (intervalId) return;
@@ -219,6 +238,7 @@ auth.onAuthStateChanged(user => {
         pedidosRef.on('child_added', (snapshot) => {
             renderizarPedido(snapshot.val(), snapshot.key, false);
             resetInactivityTimer();
+            atualizarContadorPendentes();
         });
 
         pedidosRef.on('child_changed', (snapshot) => {
@@ -241,6 +261,7 @@ auth.onAuthStateChanged(user => {
             if (existingPedidoDiv) existingPedidoDiv.remove();
             renderizarPedido(newPedidoData, pedidoId, true);
             resetInactivityTimer();
+            atualizarContadorPendentes();
         });
 
         pedidosRef.on('child_removed', (snapshot) => {
@@ -254,6 +275,7 @@ auth.onAuthStateChanged(user => {
                 clearPendingItems(pedidoId);
                 removeOrderFromConfirmed(pedidoId);
                 console.log(`Dados locais limpos para o pedido: ${pedidoId}`);
+                atualizarContadorPendentes();
             }
         });
 
@@ -262,6 +284,11 @@ auth.onAuthStateChanged(user => {
         pedidosRef.off();
         if(pendentesContainer) pendentesContainer.innerHTML = '';
         if(confirmadosContainer) confirmadosContainer.innerHTML = '';
+        // Reseta o contador quando faz logout
+        if(contadorPendentes) {
+            contadorPendentes.textContent = '0';
+            contadorPendentes.style.display = 'none';
+        }
     }
 });
 
@@ -340,6 +367,7 @@ document.querySelector('main').addEventListener('click', (event) => {
         addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
         clearPendingItems(card.id); // Limpa os itens pendentes da sessão
         database.ref('pedidos/' + card.id).set(pedido);
+        atualizarContadorPendentes(); // Atualiza o contador após confirmar
 
     } else if (target.classList.contains('nao-confirmar-btn')) {
         const recusarConfirmModal = document.getElementById('recusar-confirm-modal');
@@ -406,6 +434,7 @@ function handleRecusarPedido() {
     }
 
     closeRecusarModal();
+    atualizarContadorPendentes(); // Atualiza o contador após recusar
 }
 
 function closeRecusarModal() {
