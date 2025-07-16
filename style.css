@@ -817,4 +817,97 @@ main {
 .tab-content#confirmados .pedido-card h3 {
     color: #2c3e50 !important;
     font-weight: 700;
+}/* ====
+=============================
+   Botão "Ver Mais" para Itens Confirmados
+   ================================= */
+
+.ver-mais-btn {
+    background: none !important;
+    border: 1px solid #007bff !important;
+    color: #007bff !important;
+    padding: 8px 16px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-size: 0.85em !important;
+    margin-bottom: 12px !important;
+    transition: all 0.3s ease !important;
+    width: 100% !important;
+    text-align: center !important;
+    font-weight: 500 !important;
+}
+
+.ver-mais-btn:hover {
+    background-color: #f8f9fa !important;
+    border-color: #0056b3 !important;
+    color: #0056b3 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2) !important;
+}
+
+.ver-mais-btn:active {
+    transform: translateY(0) !important;
+}
+
+/* Estilo para itens confirmados ocultos */
+.itens-confirmados {
+    margin-top: 10px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    opacity: 0.8;
+}
+
+.itens-confirmados h4 {
+    margin-top: 0 !important;
+    margin-bottom: 8px !important;
+    color: #6c757d !important;
+    font-size: 0.9em !important;
+    font-weight: 600 !important;
+}
+
+.itens-confirmados ul {
+    margin: 0 !important;
+    padding: 0 !important;
+    list-style: none !important;
+    background: none !important;
+    border: none !important;
+    max-height: none !important;
+}
+
+.itens-confirmados li {
+    color: #6c757d !important;
+    font-size: 0.9em !important;
+    padding: 4px 0 !important;
+    border-bottom: 1px solid #e9ecef !important;
+}
+
+.itens-confirmados li:last-child {
+    border-bottom: none !important;
+}
+
+/* Animação suave para mostrar/ocultar */
+.itens-confirmados {
+    transition: all 0.3s ease;
+}
+
+/* Destaque visual para itens adicionados na aba pendentes */
+#pendentes .pedido-card ul li[style*="color: #d9534f"] {
+    background-color: rgba(231, 76, 60, 0.1) !important;
+    padding: 8px 12px !important;
+    border-radius: 6px !important;
+    border: 1px solid rgba(231, 76, 60, 0.3) !important;
+    margin: 4px 0 !important;
+    font-weight: bold !important;
+}
+
+/* Estilo especial para cards com itens adicionados na aba pendentes */
+#pendentes .pedido-card.animating {
+    border-left-color: #e74c3c !important;
+    border-left-width: 8px !important;
+}
+
+#pendentes .pedido-card.animating::before {
+    background: linear-gradient(90deg, #e74c3c, #ec7063) !important;
 }

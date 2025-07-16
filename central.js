@@ -332,18 +332,144 @@ tabsContainer.addEventListener('click', (e) => {
     }
 });
 
-loginBtn.addEventListener('click', () => {
-    const email = loginEmailInput.value;
-    const password = loginPasswordInput.value;
-    auth.signInWithEmailAndPassword(email, password)
-        .then(() => { loginErrorMessage.textContent = ''; })
-        .catch((error) => {
-            let message = "Erro de login. Verifique seu email e senha.";
-            if (error.code === 'auth/user-not-found') message = "Usuário não encontrado.";
-            else if (error.code === 'auth/wrong-password') message = "Senha incorreta.";
-            else if (error.code === 'auth/invalid-email') message = "Email inválido.";
-            loginErrorMessage.textContent = message;
+// Aguarda o DOM estar completamente carregado
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM carregado, configurando login...');
+    
+    // Função para realizar o login
+    function performLogin() {
+        console.log('Tentativa de login iniciada');
+        
+        if (!loginEmailInput || !loginPasswordInput || !loginErrorMessage || !loginBtn) {
+            console.error('Elementos de login não encontrados');
+            return;
+        }
+        
+        const email = loginEmailInput.value.trim();
+        const password = loginPasswordInput.value.trim();
+        
+        console.log('Email:', email ? 'preenchido' : 'vazio');
+        console.log('Password:', password ? 'preenchido' : 'vazio');
+        
+        // Validação básica
+        if (!email || !password) {
+            loginErrorMessage.textContent = "Por favor, preencha email e senha.";
+            loginErrorMessage.style.color = '#d9534f';
+            return;
+        }
+        
+        // Limpa mensagem de erro anterior
+        loginErrorMessage.textContent = '';
+        
+        // Desabilita o botão durante o login
+        loginBtn.disabled = true;
+        loginBtn.textContent = 'Entrando...';
+        loginBtn.style.opacity = '0.6';
+        
+        console.log('Tentando autenticar com Firebase...');
+        
+        auth.signInWithEmailAndPassword(email, password)
+            .then((userCredential) => { 
+                console.log('Login realizado com sucesso:', userCredential.user.email);
+                loginErrorMessage.textContent = '';
+            })
+            .catch((error) => {
+                console.error('Erro de login:', error.code, error.message);
+                let message = "Erro de login. Verifique seu email e senha.";
+                
+                switch(error.code) {
+                    case 'auth/user-not-found':
+                        message = "Usuário não encontrado.";
+                        break;
+                    case 'auth/wrong-password':
+                        message = "Senha incorreta.";
+                        break;
+                    case 'auth/invalid-email':
+                        message = "Email inválido.";
+                        break;
+                    case 'auth/too-many-requests':
+                        message = "Muitas tentativas. Tente novamente mais tarde.";
+                        break;
+                    case 'auth/network-request-failed':
+                        message = "Erro de conexão. Verifique sua internet.";
+                        break;
+                    case 'auth/invalid-credential':
+                        message = "Credenciais inválidas. Verifique email e senha.";
+                        break;
+                    default:
+                        message = `Erro: ${error.message}`;
+                }
+                
+                loginErrorMessage.textContent = message;
+                loginErrorMessage.style.color = '#d9534f';
+            })
+            .finally(() => {
+                // Reabilita o botão
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Entrar';
+                loginBtn.style.opacity = '1';
+            });
+    }
+
+    // Verifica se os elementos existem
+    if (loginBtn && loginEmailInput && loginPasswordInput && loginErrorMessage) {
+        console.log('Todos os elementos de login encontrados');
+        
+        // Event listener para o botão
+        loginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            performLogin();
         });
+        
+        // Event listener para Enter nos campos de input
+        loginEmailInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performLogin();
+            }
+        });
+        
+        loginPasswordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                performLogin();
+            }
+        });
+        
+        console.log('Event listeners de login configurados com sucesso');
+        
+        // Teste de conectividade com Firebase
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                console.log('Usuário já logado:', user.email);
+            } else {
+                console.log('Usuário não logado');
+            }
+        });
+        
+    } else {
+        console.error('Elementos de login não encontrados:', {
+            loginBtn: !!loginBtn,
+            loginEmailInput: !!loginEmailInput,
+            loginPasswordInput: !!loginPasswordInput,
+            loginErrorMessage: !!loginErrorMessage
+        });
+        
+        // Tenta encontrar os elementos novamente após um delay
+        setTimeout(() => {
+            const btn = document.getElementById('login-btn');
+            const email = document.getElementById('login-email');
+            const pass = document.getElementById('login-password');
+            const error = document.getElementById('login-error-message');
+            
+            console.log('Segunda tentativa de encontrar elementos:', {
+                btn: !!btn,
+                email: !!email,
+                pass: !!pass,
+                error: !!error
+            });
+        }, 1000);
+    }
 });
 
 logoutBtn.addEventListener('click', () => {
@@ -547,11 +673,55 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     pedidoDiv.dataset.pedido = JSON.stringify(pedido);
 
     const dataPedido = new Date(pedido.timestamp).toLocaleString('pt-BR');
+    // Verifica se o pedido já foi confirmado (tanto no localStorage quanto no Firebase)
+    const seenPedidos = getSeenPedidos();
+    const hasBeenSeen = seenPedidos.includes(pedidoId);
+    const wasConfirmedInFirebase = pedido.jaConfirmado === true || pedido.confirmado === true;
+    const hasNewItems = pedido.itensAdicionados && pedido.itensAdicionados.length > 0;
+    
+    // NOVA LÓGICA: Pedidos com itens adicionados sempre precisam de confirmação
+    const needsConfirmation = (!hasBeenSeen && !wasConfirmedInFirebase) || hasNewItems;
+    
+    // Separa itens confirmados dos novos para a aba pendentes
     let itensHtml = '';
-    pedido.itens.forEach(item => {
-        const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
-        itensHtml += `<li>${item.nome} (x${item.quantidade})${subTotal}</li>`;
-    });
+    let itensConfirmadosHtml = '';
+    
+    // Verifica se está na aba pendentes e tem itens adicionados
+    const isInPendingTab = needsConfirmation && hasNewItems;
+    
+    if (isInPendingTab) {
+        // Na aba pendentes com itens novos: oculta itens já confirmados
+        itensConfirmadosHtml = `
+            <div class="itens-confirmados" style="display: none;">
+                <h4 style="margin-top: 8px; margin-bottom: 8px; color: #6c757d; font-size: 0.9em;">Itens Já Confirmados:</h4>
+                <ul style="margin-top: 0; margin-bottom: 8px; opacity: 0.7;">`;
+        
+        pedido.itens.forEach(item => {
+            const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+            itensConfirmadosHtml += `<li style="color: #6c757d;">${item.nome} (x${item.quantidade})${subTotal}</li>`;
+        });
+        itensConfirmadosHtml += `</ul></div>`;
+        
+        // Botão "Ver mais" para mostrar itens confirmados
+        itensHtml = `<button class="ver-mais-btn" onclick="toggleItensConfirmados(this)" style="
+            background: none; 
+            border: 1px solid #007bff; 
+            color: #007bff; 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 0.85em;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        ">📋 Ver itens já confirmados</button>`;
+    } else {
+        // Comportamento normal: mostra todos os itens
+        pedido.itens.forEach(item => {
+            const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+            itensHtml += `<li>${item.nome} (x${item.quantidade})${subTotal}</li>`;
+        });
+    }
+    
     let itensAdicionadosHtml = '';
     if (pedido.itensAdicionados && pedido.itensAdicionados.length > 0) {
         itensAdicionadosHtml += `<h4 style="margin-top: 8px; margin-bottom: 2px; color: #d9534f;">Itens Adicionados:</h4><ul style="margin-top: 0; margin-bottom: 8px;">`;
@@ -562,13 +732,26 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         itensAdicionadosHtml += `</ul>`;
     }
     const [mesaInfo, clienteInfo] = pedido.cliente.split(' - ');
-    pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p><p><strong>Pedidos:</strong></p>` : '<p><strong>Pedidos:</strong></p>'}<ul>${itensHtml}</ul>${itensAdicionadosHtml}<p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
+    // Monta o HTML do card baseado no contexto
+    let pedidosSection = '';
+    if (isInPendingTab) {
+        // Na aba pendentes com itens novos: estrutura especial
+        pedidosSection = `
+            <p><strong>Pedidos:</strong></p>
+            ${itensHtml}
+            ${itensConfirmadosHtml}
+            ${itensAdicionadosHtml}
+        `;
+    } else {
+        // Comportamento normal
+        pedidosSection = `
+            <p><strong>Pedidos:</strong></p>
+            <ul>${itensHtml}</ul>
+            ${itensAdicionadosHtml}
+        `;
+    }
     
-    // Verifica se o pedido já foi confirmado (tanto no localStorage quanto no Firebase)
-    const seenPedidos = getSeenPedidos();
-    const hasBeenSeen = seenPedidos.includes(pedidoId);
-    const wasConfirmedInFirebase = pedido.jaConfirmado === true || pedido.confirmado === true;
-    const hasNewItems = pedido.itensAdicionados && pedido.itensAdicionados.length > 0;
+    pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}${pedidosSection}<p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
     
     // Se foi confirmado no Firebase mas não está no localStorage, adiciona
     if (wasConfirmedInFirebase && !hasBeenSeen && !hasNewItems) {
@@ -576,9 +759,31 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         addOrderToConfirmed(pedidoId);
         console.log(`Sincronizando pedido ${pedidoId} que foi confirmado no Firebase`);
     }
+
+    if (needsConfirmation) {
+        pendentesContainer.prepend(pedidoDiv);
+        // Se tem itens novos, remove da lista de "vistos" para forçar reconfirmação
+        if (hasNewItems) {
+            removePedidoFromSeen(pedidoId);
+            console.log(`Pedido ${pedidoId} movido para pendentes devido a itens adicionados`);
+        }
+    } else {
+        confirmadosContainer.prepend(pedidoDiv);
+    }
+
+    // Lógica de classe baseada no histórico de confirmação para garantir a cor correta
+    if (isOrderConfirmed(pedidoId)) {
+        pedidoDiv.classList.add('pedido-atualizado'); // Vermelho para atualizações
+    } else {
+        pedidoDiv.classList.add('pedido-novo'); // Verde para novos
+    }
     
-    // NOVA LÓGICA: Pedidos com itens adicionados sempre precisam de confirmação
-    const needsConfirmation = (!hasBeenSeen && !wasConfirmedInFirebase) || hasNewItems;
+    // Se foi confirmado no Firebase mas não está no localStorage, adiciona
+    if (wasConfirmedInFirebase && !hasBeenSeen && !hasNewItems) {
+        addPedidoToSeen(pedidoId);
+        addOrderToConfirmed(pedidoId);
+        console.log(`Sincronizando pedido ${pedidoId} que foi confirmado no Firebase`);
+    }
 
     if (needsConfirmation) {
         pendentesContainer.prepend(pedidoDiv);
@@ -668,4 +873,23 @@ if (audioModal) {
             skipSound();
         }
     });
+}
+// --- FUNÇÃO PARA TOGGLE DOS ITENS CONFIRMADOS ---
+function toggleItensConfirmados(button) {
+    const card = button.closest('.pedido-card');
+    const itensConfirmados = card.querySelector('.itens-confirmados');
+    
+    if (itensConfirmados.style.display === 'none') {
+        // Mostra os itens confirmados
+        itensConfirmados.style.display = 'block';
+        button.innerHTML = '📋 Ocultar itens já confirmados';
+        button.style.backgroundColor = '#f8f9fa';
+        button.style.color = '#6c757d';
+    } else {
+        // Oculta os itens confirmados
+        itensConfirmados.style.display = 'none';
+        button.innerHTML = '📋 Ver itens já confirmados';
+        button.style.backgroundColor = 'transparent';
+        button.style.color = '#007bff';
+    }
 }
