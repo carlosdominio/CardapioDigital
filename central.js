@@ -499,16 +499,23 @@ function gerarPdf(pedido) {
     const filename = `comprovante_${pedido.cliente}_${new Date().getTime()}.pdf`;
 
     const infoSection = `
-        <div style="margin-bottom: 20px; text-align: left;">
+        <div style="margin-bottom: 20px; text-align: left; background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff;">
             <p style="margin: 5px 0;"><strong>Mesa:</strong> ${mesaInfo || 'Não informado'}</p>
             <p style="margin: 5px 0;"><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p>
-            <p style="margin: 5px 0;"><strong>Horário do Pedido:</strong> ${horarioFormatado}</p>
+            <p style="margin: 5px 0;"><strong>Horário:</strong> ${horarioFormatado}</p>
             <p style="margin: 5px 0;"><strong>Data:</strong> ${dataFormatada}</p>
-            <p style="margin: 5px 0;"><strong>Forma de Pagamento:</strong> ${formaPagamento}</p>
+            <p style="margin: 5px 0;"><strong>Pagamento:</strong> ${formaPagamento}</p>
+            ${pedido.mesaCode ? `<p style="margin: 5px 0;"><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}
         </div>
     `;
 
-    let itensTableHtml = `<table style="width:100%; border-collapse: collapse; margin-top: 20px;"><thead><tr style="background-color: #f2f2f2;"><th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Item</th><th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Qtd</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Preço Unit.</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Total</th></tr></thead><tbody>`;
+    const pedidosSection = `
+        <div style="margin: 20px 0;">
+            <h3 style="margin: 10px 0; color: #2c3e50; font-size: 1.2em; border-bottom: 2px solid #007bff; padding-bottom: 5px;">🍽️ Pedidos:</h3>
+        </div>
+    `;
+
+    let itensTableHtml = `<table style="width:100%; border-collapse: collapse; margin-top: 10px;"><thead><tr style="background-color: #f2f2f2;"><th style="padding: 8px; border: 1px solid #ddd; text-align: left;">Item</th><th style="padding: 8px; border: 1px solid #ddd; text-align: center;">Qtd</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Preço Unit.</th><th style="padding: 8px; border: 1px solid #ddd; text-align: right;">Total</th></tr></thead><tbody>`;
     pedido.itens.forEach(item => {
         const itemTotal = (item.preco && item.quantidade) ? `R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
         itensTableHtml += `<tr><td style="padding: 8px; border: 1px solid #ddd; text-align: left;">${item.nome}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.quantidade}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right; color: red; font-weight: bold;">R$ ${item.preco.toFixed(2).replace('.', ',')}</td><td style="padding: 8px; border: 1px solid #ddd; text-align: right;">${itemTotal}</td></tr>`;
@@ -520,7 +527,7 @@ function gerarPdf(pedido) {
         });
     }
     itensTableHtml += `</tbody></table>`;
-    const invoiceHtml = `<div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 600px; margin: auto;"><h2 style="text-align: center; color: #333;">Comprovante de Pedido</h2><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">${infoSection}${itensTableHtml}<p style="text-align: right; font-size: 1.2em; font-weight: bold; margin-top: 20px;">Total Geral: ${pedido.total}</p><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p style="text-align: center; font-size: 0.8em; color: #777;">Obrigado pelo seu pedido!</p></div>`;
+    const invoiceHtml = `<div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; max-width: 600px; margin: auto;"><h2 style="text-align: center; color: #333;">Comprovante de Pedido</h2><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">${infoSection}${pedidosSection}${itensTableHtml}<p style="text-align: right; font-size: 1.2em; font-weight: bold; margin-top: 20px;">Total Geral: ${pedido.total}</p><hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;"><p style="text-align: center; font-size: 0.8em; color: #777;">Obrigado pelo seu pedido!</p></div>`;
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = invoiceHtml;
     const opt = { margin: 1, filename: filename, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 4 }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
@@ -555,7 +562,7 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         itensAdicionadosHtml += `</ul>`;
     }
     const [mesaInfo, clienteInfo] = pedido.cliente.split(' - ');
-    pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}<ul>${itensHtml}</ul>${itensAdicionadosHtml}<p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
+    pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p><p><strong>Pedidos:</strong></p>` : '<p><strong>Pedidos:</strong></p>'}<ul>${itensHtml}</ul>${itensAdicionadosHtml}<p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
     
     // Verifica se o pedido já foi confirmado (tanto no localStorage quanto no Firebase)
     const seenPedidos = getSeenPedidos();
