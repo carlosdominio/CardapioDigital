@@ -853,18 +853,18 @@ main {
 .itens-confirmados {
     margin-top: 10px;
     padding: 12px;
-    background-color: #f8f9fa;
+    background-color: #e9ecef;
     border-radius: 8px;
-    border: 1px solid #e9ecef;
-    opacity: 0.8;
+    border: 1px solid #ced4da;
+    opacity: 1;
 }
 
 .itens-confirmados h4 {
     margin-top: 0 !important;
     margin-bottom: 8px !important;
-    color: #6c757d !important;
+    color: #495057 !important;
     font-size: 0.9em !important;
-    font-weight: 600 !important;
+    font-weight: 700 !important;
 }
 
 .itens-confirmados ul {
@@ -877,14 +877,19 @@ main {
 }
 
 .itens-confirmados li {
-    color: #6c757d !important;
+    color: #343a40 !important;
     font-size: 0.9em !important;
-    padding: 4px 0 !important;
-    border-bottom: 1px solid #e9ecef !important;
+    font-weight: 500 !important;
+    padding: 6px 8px !important;
+    border-bottom: 1px solid #ced4da !important;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 4px;
+    margin-bottom: 2px !important;
 }
 
 .itens-confirmados li:last-child {
     border-bottom: none !important;
+    margin-bottom: 0 !important;
 }
 
 /* Animação suave para mostrar/ocultar */
