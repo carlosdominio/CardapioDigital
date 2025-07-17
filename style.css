@@ -272,9 +272,15 @@ aside#carrinho {
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: box-shadow 0.3s;
+    transition: box-shadow 0.3s, min-height 0.3s ease;
     display: flex;
     flex-direction: column;
+    min-height: auto; /* Altura automática baseada no conteúdo */
+}
+
+/* Apenas cards com itens ocultos (animating) têm altura mínima maior */
+.pedido-card.animating {
+    min-height: 280px;
 }
 
 .pedido-card > *:not(.button-container) {
