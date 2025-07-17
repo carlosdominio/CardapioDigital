@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Debug - Sistema de Pedidos</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .debug-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .debug-section h3 { margin-top: 0; color: #333; }
+        .log { background: #f5f5f5; padding: 10px; margin: 10px 0; border-radius: 3px; font-family: monospace; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+    </style>
+</head>
+<body>
+    <h1>Teste Debug - Sistema de Pedidos</h1>
+    
+    <div class="debug-section">
+        <h3>Teste de Funcionalidades</h3>
+        <button onclick="testarSessionStorage()">Testar SessionStorage</button>
+        <button onclick="testarLogicaPendentes()">Testar Lógica de Pendentes</button>
+        <button onclick="limparStorage()">Limpar Storage</button>
+        <div id="resultado-teste" class="log"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Simulação de Pedido</h3>
+        <button onclick="simularPedidoNovo()">1. Simular Pedido Novo</button>
+        <button onclick="simularConfirmacao()">2. Simular Confirmação</button>
+        <button onclick="simularItensAdicionados()">3. Simular Itens Adicionados</button>
+        <div id="simulacao-log" class="log"></div>
+    </div>
+
+    <script>
+        // Funções de storage (copiadas do central.js)
+        function getPendingItems(pedidoId) {
+            const pending = sessionStorage.getItem(`pending_${pedidoId}`);
+            return pending ? JSON.parse(pending) : [];
+        }
+
+        function savePendingItems(pedidoId, items) {
+            sessionStorage.setItem(`pending_${pedidoId}`, JSON.stringify(items));
+        }
+
+        function clearPendingItems(pedidoId) {
+            sessionStorage.removeItem(`pending_${pedidoId}`);
+        }
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('resultado-teste');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+        }
+
+        function simLog(message, type = 'info') {
+            const logDiv = document.getElementById('simulacao-log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+        }
+
+        function testarSessionStorage() {
+            document.getElementById('resultado-teste').innerHTML = '';
+            
+            const testId = 'teste123';
+            const testItems = [
+                { nome: 'Hambúrguer', quantidade: 1, preco: 15.00 },
+                { nome: 'Batata', quantidade: 1, preco: 8.00 }
+            ];
+
+            // Teste 1: Salvar itens
+            savePendingItems(testId, testItems);
+            log('✓ Itens salvos no sessionStorage', 'success');
+
+            // Teste 2: Recuperar itens
+            const retrieved = getPendingItems(testId);
+            if (retrieved.length === 2) {
+                log('✓ Itens recuperados com sucesso: ' + JSON.stringify(retrieved), 'success');
+            } else {
+                log('✗ Erro ao recuperar itens', 'error');
+            }
+
+            // Teste 3: Limpar itens
+            clearPendingItems(testId);
+            const afterClear = getPendingItems(testId);
+            if (afterClear.length === 0) {
+                log('✓ Itens limpos com sucesso', 'success');
+            } else {
+                log('✗ Erro ao limpar itens', 'error');
+            }
+        }
+
+        function testarLogicaPendentes() {
+            document.getElementById('resultado-teste').innerHTML = '';
+            
+            const pedidoId = 'mesa1-joao';
+            
+            // Simula cenário: pedido com itens confirmados + novos itens
+            const itensConfirmados = [
+                { nome: 'Hambúrguer', quantidade: 1, preco: 15.00 }
+            ];
+            
+            const novosItens = [
+                { nome: 'Batata', quantidade: 1, preco: 8.00 }
+            ];
+
+            // Simula primeira adição de itens
+            log('Simulando primeira adição de itens...', 'info');
+            savePendingItems(pedidoId, novosItens);
+            
+            const pendentes1 = getPendingItems(pedidoId);
+            log(`Itens pendentes após primeira adição: ${pendentes1.length}`, 'info');
+
+            // Simula segunda adição (deve acumular)
+            log('Simulando segunda adição de itens...', 'info');
+            const maisItens = [{ nome: 'Refrigerante', quantidade: 1, preco: 5.00 }];
+            
+            const existingPending = getPendingItems(pedidoId);
+            const combinedPending = [...existingPending, ...maisItens];
+            savePendingItems(pedidoId, combinedPending);
+
+            const pendentes2 = getPendingItems(pedidoId);
+            log(`Itens pendentes após segunda adição: ${pendentes2.length}`, 'info');
+
+            // Simula lógica de "todos os itens ficam pendentes"
+            if (existingPending.length > 0) {
+                log('✓ Detectou itens pendentes existentes - aplicando lógica de "todos pendentes"', 'success');
+                
+                const todosOsItens = [...itensConfirmados, ...combinedPending];
+                savePendingItems(pedidoId, todosOsItens);
+                
+                const final = getPendingItems(pedidoId);
+                log(`✓ Total de itens pendentes final: ${final.length}`, 'success');
+                log(`Itens: ${JSON.stringify(final.map(i => i.nome))}`, 'info');
+            }
+
+            // Limpa teste
+            clearPendingItems(pedidoId);
+        }
+
+        function limparStorage() {
+            sessionStorage.clear();
+            localStorage.clear();
+            document.getElementById('resultado-teste').innerHTML = '';
+            document.getElementById('simulacao-log').innerHTML = '';
+            log('✓ Storage limpo', 'success');
+        }
+
+        // Simulação completa
+        let estadoSimulacao = {
+            pedidoId: 'mesa1-joao',
+            itensConfirmados: [],
+            itensPendentes: []
+        };
+
+        function simularPedidoNovo() {
+            document.getElementById('simulacao-log').innerHTML = '';
+            
+            estadoSimulacao.itensConfirmados = [
+                { nome: 'Hambúrguer', quantidade: 1, preco: 15.00 }
+            ];
+            estadoSimulacao.itensPendentes = [];
+            
+            clearPendingItems(estadoSimulacao.pedidoId);
+            
+            simLog('🍔 Pedido novo criado: Mesa 1 - João', 'success');
+            simLog(`Itens: ${estadoSimulacao.itensConfirmados.map(i => i.nome).join(', ')}`, 'info');
+        }
+
+        function simularConfirmacao() {
+            if (estadoSimulacao.itensConfirmados.length === 0) {
+                simLog('❌ Crie um pedido primeiro!', 'error');
+                return;
+            }
+            
+            simLog('✅ Pedido confirmado - movido para aba "Confirmados"', 'success');
+            simLog('Estado: Todos os itens estão confirmados', 'info');
+        }
+
+        function simularItensAdicionados() {
+            if (estadoSimulacao.itensConfirmados.length === 0) {
+                simLog('❌ Crie e confirme um pedido primeiro!', 'error');
+                return;
+            }
+            
+            const novosItens = [
+                { nome: 'Batata Frita', quantidade: 1, preco: 8.00 },
+                { nome: 'Refrigerante', quantidade: 1, preco: 5.00 }
+            ];
+            
+            // Simula a lógica do central.js
+            const existingPending = getPendingItems(estadoSimulacao.pedidoId);
+            const combinedPending = [...existingPending, ...novosItens];
+            savePendingItems(estadoSimulacao.pedidoId, combinedPending);
+            
+            simLog('🆕 Novos itens adicionados ao pedido!', 'info');
+            simLog(`Novos itens: ${novosItens.map(i => i.nome).join(', ')}`, 'info');
+            
+            // Aplica lógica: se já tinha pendentes, todos ficam pendentes
+            if (existingPending.length > 0) {
+                simLog('⚠️ Já tinha itens pendentes - TODOS os itens ficam pendentes!', 'info');
+                
+                const todosOsItens = [...estadoSimulacao.itensConfirmados, ...combinedPending];
+                savePendingItems(estadoSimulacao.pedidoId, todosOsItens);
+                
+                simLog(`🔄 Total de itens pendentes: ${todosOsItens.length}`, 'success');
+                simLog(`Todos os itens: ${todosOsItens.map(i => i.nome).join(', ')}`, 'success');
+            } else {
+                simLog('ℹ️ Primeira vez recebendo itens - comportamento normal', 'info');
+                simLog(`Itens pendentes: ${combinedPending.length}`, 'info');
+            }
+            
+            const finalPending = getPendingItems(estadoSimulacao.pedidoId);
+            simLog(`📊 Estado final - Itens pendentes: ${finalPending.length}`, 'info');
+        }
+    </script>
+</body>
+</html>

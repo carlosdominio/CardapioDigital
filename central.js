@@ -265,11 +265,49 @@ auth.onAuthStateChanged(user => {
             const pedidoId = snapshot.key;
             let newPedidoData = snapshot.val();
 
-            // Acumula itens pendentes usando sessionStorage
+            // Acumula itens pendentes usando sessionStorage (LÓGICA ORIGINAL MANTIDA)
             if (newPedidoData.itensAdicionados && newPedidoData.itensAdicionados.length > 0) {
                 const existingPending = getPendingItems(pedidoId);
-                const combinedPending = [...existingPending, ...newPedidoData.itensAdicionados];
-                savePendingItems(pedidoId, combinedPending);
+                
+                // Verifica se o pedido NUNCA foi confirmado (é um pedido novo que ainda está pendente)
+                const jaFoiConfirmado = isOrderConfirmed(pedidoId);
+                const jaFoiVisto = getSeenPedidos().includes(pedidoId);
+                const ehPedidoNovo = !jaFoiConfirmado && !jaFoiVisto;
+                
+                console.log(`Pedido ${pedidoId} - Já foi confirmado: ${jaFoiConfirmado}, Já foi visto: ${jaFoiVisto}, É pedido novo: ${ehPedidoNovo}`);
+                
+                if (ehPedidoNovo) {
+                    // CASO ESPECIAL: Pedido novo que nunca foi confirmado - junta tudo como um pedido único
+                    console.log(`🆕 PEDIDO NOVO: Juntando todos os itens como um pedido único (mantendo layout visual)`);
+                    
+                    // Combina TODOS os itens (originais + pendentes + adicionados)
+                    const todosOsItens = [...(newPedidoData.itens || []), ...existingPending, ...newPedidoData.itensAdicionados];
+                    
+                    // CONSOLIDA itens duplicados (soma quantidades ao invés de duplicar)
+                    const itensConsolidados = consolidarItens(todosOsItens);
+                    
+                    // Salva todos como pendentes para lógica interna
+                    savePendingItems(pedidoId, itensConsolidados);
+                    
+                    console.log(`✅ Pedido novo: ${itensConsolidados.length} itens únicos aguardando confirmação:`, itensConsolidados.map(i => `${i.nome} (x${i.quantidade})`));
+                } else {
+                    // LÓGICA ORIGINAL: Pedido já foi confirmado antes - mantém separação
+                    const combinedPending = [...existingPending, ...newPedidoData.itensAdicionados];
+                    savePendingItems(pedidoId, combinedPending);
+                    
+                    // Se já tinha itens pendentes, todos ficam pendentes
+                    if (existingPending.length > 0) {
+                        console.log(`🔄 PEDIDO JÁ CONFIRMADO: Aplicando regra de todos pendentes`);
+                        
+                        const todosOsItens = [...(newPedidoData.itens || []), ...combinedPending];
+                        savePendingItems(pedidoId, todosOsItens);
+                        newPedidoData.itens = [];
+                        
+                        console.log(`✅ Todos os ${todosOsItens.length} itens agora estão pendentes`);
+                    } else {
+                        console.log(`ℹ️ Pedido já confirmado: Primeira vez recebendo itens adicionados - lógica original`);
+                    }
+                }
             }
 
             // Força a reconfirmação se houver itens pendentes
@@ -500,16 +538,37 @@ document.querySelector('main').addEventListener('click', (event) => {
         resetInactivityTimer();
         const pedido = JSON.parse(card.dataset.pedido);
         
-        if (pedido.itensAdicionados) {
-            pedido.itensAdicionados.forEach(itemAdicionado => {
-                const itemExistente = pedido.itens.find(item => item.id === itemAdicionado.id);
-                if (itemExistente) {
-                    itemExistente.quantidade += itemAdicionado.quantidade;
-                } else {
-                    pedido.itens.push(itemAdicionado);
-                }
-            });
+        // Verifica se é um pedido novo (nunca foi confirmado)
+        const jaFoiConfirmado = isOrderConfirmed(card.id);
+        const jaFoiVisto = getSeenPedidos().includes(card.id);
+        const ehPedidoNovo = !jaFoiConfirmado && !jaFoiVisto;
+        
+        if (ehPedidoNovo) {
+            console.log(`🆕 CONFIRMANDO PEDIDO NOVO: Processando todos os itens juntos`);
+            
+            // Para pedidos novos, pega TODOS os itens pendentes (que incluem originais + adicionados)
+            const todosOsItensPendentes = getPendingItems(card.id);
+            if (todosOsItensPendentes.length > 0) {
+                // Substitui os itens do pedido pelos itens pendentes (que já incluem tudo)
+                pedido.itens = todosOsItensPendentes;
+                console.log(`✅ Confirmando ${todosOsItensPendentes.length} itens juntos:`, todosOsItensPendentes.map(i => i.nome));
+            }
+        } else {
+            console.log(`🔄 CONFIRMANDO PEDIDO JÁ EXISTENTE: Lógica original`);
+            
+            // Lógica original para pedidos já confirmados
+            if (pedido.itensAdicionados) {
+                pedido.itensAdicionados.forEach(itemAdicionado => {
+                    const itemExistente = pedido.itens.find(item => item.id === itemAdicionado.id);
+                    if (itemExistente) {
+                        itemExistente.quantidade += itemAdicionado.quantidade;
+                    } else {
+                        pedido.itens.push(itemAdicionado);
+                    }
+                });
+            }
         }
+        
         delete pedido.itensAdicionados;
 
         // Adiciona campos para garantir que o Firebase detecte a mudança e persista o estado
@@ -679,18 +738,38 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     const wasConfirmedInFirebase = pedido.jaConfirmado === true || pedido.confirmado === true;
     const hasNewItems = pedido.itensAdicionados && pedido.itensAdicionados.length > 0;
     
-    // NOVA LÓGICA: Pedidos com itens adicionados sempre precisam de confirmação
+    // Verifica se é um pedido novo (nunca foi confirmado)
+    const jaFoiConfirmado = isOrderConfirmed(pedidoId);
+    const jaFoiVisto = hasBeenSeen;
+    const ehPedidoNovo = !jaFoiConfirmado && !jaFoiVisto;
+    
     const needsConfirmation = (!hasBeenSeen && !wasConfirmedInFirebase) || hasNewItems;
     
-    // Separa itens confirmados dos novos para a aba pendentes
     let itensHtml = '';
     let itensConfirmadosHtml = '';
     
-    // Verifica se está na aba pendentes e tem itens adicionados
-    const isInPendingTab = needsConfirmation && hasNewItems;
+    console.log(`Renderizando pedido ${pedidoId} - É novo: ${ehPedidoNovo}, Tem itens novos: ${hasNewItems}`);
     
-    if (isInPendingTab) {
-        // Na aba pendentes com itens novos: oculta itens já confirmados
+    if (ehPedidoNovo && hasNewItems) {
+        // PEDIDO NOVO: Mostra todos os itens juntos na seção "Pedidos:"
+        console.log(`🆕 RENDERIZAÇÃO PEDIDO NOVO: Mostrando todos os itens juntos`);
+        
+        // Combina todos os itens (originais + adicionados) em uma única lista
+        const todosOsItens = [...(pedido.itens || []), ...(pedido.itensAdicionados || [])];
+        
+        // CONSOLIDA itens duplicados para exibição
+        const itensConsolidados = consolidarItens(todosOsItens);
+        
+        itensConsolidados.forEach(item => {
+            const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+            itensHtml += `<li>${item.nome} (x${item.quantidade})${subTotal}</li>`;
+        });
+        
+        console.log(`✅ Mostrando ${itensConsolidados.length} itens únicos na seção Pedidos`);
+    } else if (needsConfirmation && hasNewItems) {
+        // PEDIDO JÁ CONFIRMADO: Lógica original com separação
+        console.log(`🔄 RENDERIZAÇÃO PEDIDO CONFIRMADO: Mantendo separação`);
+        
         itensConfirmadosHtml = `
             <div class="itens-confirmados" style="display: none;">
                 <h4 style="margin-top: 8px; margin-bottom: 8px; color: #6c757d; font-size: 0.9em;">Itens Já Confirmados:</h4>
@@ -723,19 +802,34 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     }
     
     let itensAdicionadosHtml = '';
-    if (pedido.itensAdicionados && pedido.itensAdicionados.length > 0) {
+    
+    // Só mostra seção "Itens Adicionados" se NÃO for um pedido novo
+    if (pedido.itensAdicionados && pedido.itensAdicionados.length > 0 && !ehPedidoNovo) {
+        console.log(`📋 Mostrando seção "Itens Adicionados" para pedido já confirmado`);
         itensAdicionadosHtml += `<h4 style="margin-top: 8px; margin-bottom: 2px; color: #d9534f;">Itens Adicionados:</h4><ul style="margin-top: 0; margin-bottom: 8px;">`;
         pedido.itensAdicionados.forEach(item => {
             const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
             itensAdicionadosHtml += `<li style="color: #d9534f; font-weight: bold;">${item.nome} (x${item.quantidade})${subTotal}</li>`;
         });
         itensAdicionadosHtml += `</ul>`;
+    } else if (ehPedidoNovo && pedido.itensAdicionados && pedido.itensAdicionados.length > 0) {
+        console.log(`🆕 Pedido novo: Itens adicionados já estão incluídos na seção "Pedidos"`);
     }
     const [mesaInfo, clienteInfo] = pedido.cliente.split(' - ');
-    // Monta o HTML do card baseado no contexto
+    
+    // Monta o HTML do card baseado no tipo de pedido
     let pedidosSection = '';
-    if (isInPendingTab) {
-        // Na aba pendentes com itens novos: estrutura especial
+    
+    if (ehPedidoNovo && hasNewItems) {
+        // PEDIDO NOVO: Estrutura especial sem <ul> (itens já estão formatados)
+        pedidosSection = `
+            <p><strong>Pedidos:</strong></p>
+            <ul>${itensHtml}</ul>
+            ${itensConfirmadosHtml}
+            ${itensAdicionadosHtml}
+        `;
+    } else if (needsConfirmation && hasNewItems) {
+        // PEDIDO JÁ CONFIRMADO: Estrutura especial com botão "Ver mais"
         pedidosSection = `
             <p><strong>Pedidos:</strong></p>
             ${itensHtml}
@@ -743,7 +837,7 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
             ${itensAdicionadosHtml}
         `;
     } else {
-        // Comportamento normal
+        // COMPORTAMENTO NORMAL: Estrutura padrão
         pedidosSection = `
             <p><strong>Pedidos:</strong></p>
             <ul>${itensHtml}</ul>
@@ -892,4 +986,33 @@ function toggleItensConfirmados(button) {
         button.style.backgroundColor = 'transparent';
         button.style.color = '#007bff';
     }
+}
+
+// --- FUNÇÃO PARA CONSOLIDAR ITENS DUPLICADOS ---
+function consolidarItens(itens) {
+    const itensConsolidados = [];
+    
+    itens.forEach(item => {
+        // Procura se já existe um item com o mesmo nome e preço
+        const itemExistente = itensConsolidados.find(i => 
+            i.nome === item.nome && 
+            i.preco === item.preco
+        );
+        
+        if (itemExistente) {
+            // Se existe, soma a quantidade
+            itemExistente.quantidade += item.quantidade;
+            console.log(`📦 Consolidando: ${item.nome} - Nova quantidade: ${itemExistente.quantidade}`);
+        } else {
+            // Se não existe, adiciona o item
+            itensConsolidados.push({
+                ...item,
+                quantidade: item.quantidade
+            });
+            console.log(`➕ Adicionando novo item: ${item.nome} (x${item.quantidade})`);
+        }
+    });
+    
+    console.log(`🔄 Consolidação concluída: ${itens.length} itens → ${itensConsolidados.length} itens únicos`);
+    return itensConsolidados;
 }
