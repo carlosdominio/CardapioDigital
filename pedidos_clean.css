@@ -1,0 +1,326 @@
+/* Estilos para a página de Pedidos */
+
+body.login-view {
+    display: grid;
+    place-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Oculta o conteúdo principal quando na visão de login */
+body.login-view>#app-content {
+    display: none;
+}
+
+.login-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+}
+
+.login-form {
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.login-form h2 {
+    margin-bottom: 25px;
+    color: #333;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    width: 100%;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.1em;
+    margin-top: 10px;
+    transition: background-color 0.2s;
+}
+
+.login-btn:hover {
+    background-color: #0056b3;
+}
+
+#login-error-message {
+    color: #d9534f;
+    margin-top: 15px;
+    min-height: 20px;
+}
+
+/* =================================
+   Estilos do Header de Pedidos
+   ================================= */
+
+.pedidos-header {
+    position: relative;
+    padding: 20px 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.search-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#search-input {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 15px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    font-size: 1em;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#search-input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.pedidos-header h1 {
+    margin: 0;
+    font-size: 1.8em;
+}
+
+#logout-btn {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 10px 20px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+/* =================================
+   Estilos das Abas de Pedidos
+   ================================= */
+
+.tabs-container {
+    display: flex;
+    justify-content: center;
+    padding: 15px 10px 0;
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.tab-link {
+    padding: 10px 25px;
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #495057;
+    background-color: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+    margin: 0 5px;
+}
+
+.tab-link:hover {
+    color: #0056b3;
+}
+
+.tab-link.active {
+    color: #007bff;
+    border-bottom-color: #007bff;
+}
+
+.contador-badge {
+    display: inline-block;
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.8em;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    min-width: 20px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.contador-badge-azul {
+    display: inline-block;
+    background-color: #007bff;
+    color: white;
+    font-size: 0.8em;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+    min-width: 20px;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.tab-content {
+    display: none;
+    padding: 20px;
+}
+
+.tab-content.active {
+    display: grid;
+    gap: 20px;
+    grid-template-columns: 1fr;
+    align-items: start;
+}
+
+@media (min-width: 900px) {
+    .tab-content.active {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+/* =================================
+   DESIGN MINIMALISTA PARA ITENS DOS PEDIDOS
+   ================================= */
+
+/* Container dos itens - Minimalista */
+.pedido-card ul {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 16px 0 !important;
+    background: #ffffff !important;
+    border-radius: 6px !important;
+    padding: 16px !important;
+    border: 1px solid #e9ecef !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Itens individuais - Clean */
+.pedido-card ul li {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 12px 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid #f8f9fa !important;
+    transition: background-color 0.2s ease !important;
+}
+
+.pedido-card ul li:last-child {
+    border-bottom: none !important;
+}
+
+.pedido-card ul li:hover {
+    background-color: #f8f9fa !important;
+}
+
+/* Nome do item */
+.pedido-card ul li .item-nome {
+    font-weight: 600 !important;
+    font-size: 1em !important;
+    color: #2c3e50 !important;
+    flex-grow: 1 !important;
+}
+
+/* Quantidade */
+.pedido-card ul li .item-quantidade {
+    background: #6c757d !important;
+    color: white !important;
+    font-weight: 500 !important;
+    font-size: 0.85em !important;
+    padding: 4px 8px !important;
+    border-radius: 10px !important;
+    margin-right: 12px !important;
+}
+
+/* Preço */
+.pedido-card ul li .item-preco {
+    font-weight: 600 !important;
+    font-size: 1em !important;
+    color: #495057 !important;
+}
+
+/* Itens adicionados - Destaque sutil */
+.pedido-card ul li[style*="color: #d9534f"] {
+    background-color: #fff5f5 !important;
+    border-left: 2px solid #dc3545 !important;
+    padding-left: 8px !important;
+}
+
+.pedido-card ul li[style*="color: #d9534f"] .item-nome {
+    color: #dc3545 !important;
+}
+
+.pedido-card ul li[style*="color: #d9534f"] .item-quantidade {
+    background: #dc3545 !important;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+    .pedidos-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .pedidos-header h1 {
+        font-size: 1.5em;
+    }
+
+    #logout-btn {
+        position: static;
+        transform: none;
+        width: 100%;
+        max-width: 200px;
+    }
+    
+    .pedido-card ul li {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        padding: 16px !important;
+    }
+    
+    .pedido-card ul li .item-details {
+        width: 100% !important;
+        justify-content: space-between !important;
+        margin-top: 8px !important;
+    }
+}

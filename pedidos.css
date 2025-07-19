@@ -501,3 +501,141 @@ main {
     width: 100%;
     /* Garante que o container ocupe o espaço disponível até o max-width */
 }
+/* =================================
+   Estilos Minimalistas para Itens de Pedido
+   ================================= */
+
+.pedido-card ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.pedido-item {
+    display: grid;
+    /* Define 4 colunas: nome, qtd, preço unitário, preço total */
+    grid-template-columns: 1fr 60px 90px 90px;
+    gap: 10px; /* Espaçamento entre as colunas */
+    align-items: start; /* Alinha os itens pelo topo para uma linha de base consistente */
+    padding: 8px 5px; /* Altura reduzida */
+    border-bottom: 1px solid #eee;
+}
+
+.item-nome {
+    font-weight: 600;
+    color: #333;
+    white-space: normal;
+    word-break: break-word;
+}
+
+.item-quantidade {
+    font-weight: 500;
+    color: #555;
+    text-align: center;
+}
+
+.item-preco-unitario {
+    font-weight: 500;
+    color: #6c757d;
+    text-align: right;
+}
+
+.item-preco {
+    font-weight: 600;
+    color: #007bff;
+    text-align: right;
+}
+
+/* Estilos para itens já confirmados (quando visíveis) */
+.item-confirmado .item-nome,
+.item-confirmado .item-quantidade {
+    color: #6c757d;
+    opacity: 0.8;
+}
+.item-confirmado .item-preco {
+    color: #8a929a;
+    opacity: 0.8;
+}
+
+
+/* Estilos para itens adicionados */
+.itens-adicionados-titulo {
+    margin-top: 15px;
+    margin-bottom: 5px;
+    color: #d9534f;
+    font-size: 1em;
+    font-weight: bold;
+}
+
+.item-adicionado .item-nome,
+.item-adicionado .item-quantidade {
+    color: #d9534f;
+    font-weight: bold;
+}
+
+.item-adicionado .item-preco {
+    color: #c82333;
+    font-weight: bold;
+}
+.total-pedido {
+    color: #d9534f; /* Vermelho */
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 2px solid #eee;
+    text-align: right;
+}
+.subtotal-confirmado {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 5px;
+    margin-top: 5px;
+    background-color: #f8f9fa;
+    border-top: 2px solid #e9ecef;
+    font-size: 0.95em;
+    color: #495057;
+}
+
+.subtotal-confirmado span {
+    font-weight: bold;
+}
+.pedido-item-header {
+    display: grid;
+    grid-template-columns: 1fr 60px 90px 90px;
+    gap: 10px;
+    padding: 8px 5px;
+    border-bottom: 2px solid #dee2e6; /* Linha mais grossa para destacar */
+    margin-top: 10px;
+    font-weight: bold;
+    color: #495057;
+    font-size: 0.9em;
+}
+
+.pedido-item-header .item-quantidade,
+.pedido-item-header .item-preco-unitario,
+.pedido-item-header .item-preco {
+    text-align: center; /* Centraliza os títulos das colunas */
+}
+
+.pedido-item-header .item-preco {
+    text-align: right; /* Mantém o total alinhado à direita */
+}
+/* =================================
+   Responsividade da Lista de Itens
+   ================================= */
+
+@media (max-width: 480px) {
+    .pedido-item, .pedido-item-header {
+        /* Ajusta para 4 colunas mais compactas em telas pequenas */
+        grid-template-columns: 1fr 45px 70px 70px;
+        gap: 5px; /* Reduz o espaçamento */
+        font-size: 0.9em; /* Reduz o tamanho da fonte */
+        padding: 8px 2px;
+    }
+
+    .pedido-item-header {
+        font-size: 0.8em;
+    }
+}

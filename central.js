@@ -737,6 +737,15 @@ function gerarPdf(pedido) {
 }
 
 function renderizarPedido(pedido, pedidoId, isUpdate) {
+    const headerHtml = `
+        <div class="pedido-item-header">
+            <span class="item-nome">Nome</span>
+            <span class="item-quantidade">Quant</span>
+            <span class="item-preco-unitario">Preço Unit.</span>
+            <span class="item-preco">Total</span>
+        </div>
+    `;
+
     // Restaura itens pendentes do sessionStorage para garantir a persistência
     const pendingItems = getPendingItems(pedidoId);
     if (pendingItems.length > 0) {
@@ -771,13 +780,17 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         // PEDIDO NOVO: Mostra todos os itens juntos na seção "Pedidos:"
         console.log(`🆕 RENDERIZAÇÃO PEDIDO NOVO: Mostrando todos os itens juntos`);
         
-        // A lista `pendingItems` (recuperada da sessão) já está consolidada pela lógica 'child_changed'.
-        // Usa diretamente a lista, sem re-processar.
         const itensConsolidados = pendingItems;
         
         itensConsolidados.forEach(item => {
-            const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
-            itensHtml += `<li>${item.nome} (x${item.quantidade})${subTotal}</li>`;
+            const subTotal = (item.preco && item.quantidade) ? `R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+            const precoUnitario = `R$ ${item.preco.toFixed(2).replace('.', ',')}`;
+            itensHtml += `<li class="pedido-item">
+                <span class="item-nome">${item.nome}</span>
+                <span class="item-quantidade">x${item.quantidade}</span>
+                <span class="item-preco-unitario">${precoUnitario}</span>
+                <span class="item-preco">${subTotal}</span>
+            </li>`;
         });
         
         console.log(`✅ Mostrando ${itensConsolidados.length} itens únicos na seção Pedidos`);
@@ -788,6 +801,7 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         itensConfirmadosHtml = `
             <div class="itens-confirmados" style="display: none;">
                 <h4 style="margin-top: 8px; margin-bottom: 8px; color: #6c757d; font-size: 0.9em;">Itens Já Confirmados:</h4>
+                ${headerHtml}
                 <ul style="margin-top: 0; margin-bottom: 8px; opacity: 0.7;">`;
         
         const itensConfirmadosSnapshot = getConfirmedItems(pedidoId);
@@ -796,20 +810,36 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
             pedido.itens = itensConfirmadosSnapshot; // Sobrescreve com o snapshot local
         }
 
+        let subtotalConfirmado = 0;
         pedido.itens.forEach(item => {
-            const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
-            itensConfirmadosHtml += `<li style="color: #6c757d;">${item.nome} (x${item.quantidade})${subTotal}</li>`;
+            const itemTotal = item.preco * item.quantidade;
+            subtotalConfirmado += itemTotal;
+            const subTotalString = `R$ ${itemTotal.toFixed(2).replace('.', ',')}`;
+            const precoUnitario = `R$ ${item.preco.toFixed(2).replace('.', ',')}`;
+            itensConfirmadosHtml += `<li class="pedido-item item-confirmado">
+                <span class="item-nome">${item.nome}</span>
+                <span class="item-quantidade">x${item.quantidade}</span>
+                <span class="item-preco-unitario">${precoUnitario}</span>
+                <span class="item-preco">${subTotalString}</span>
+            </li>`;
         });
-        itensConfirmadosHtml += `</ul></div>`;
+
+        // Adiciona a linha do subtotal dos itens confirmados
+        itensConfirmadosHtml += `</ul>
+            <div class="subtotal-confirmado">
+                <strong>Subtotal Confirmado:</strong>
+                <span>R$ ${subtotalConfirmado.toFixed(2).replace('.', ',')}</span>
+            </div>
+        </div>`;
         
         // Botão "Ver mais" para mostrar itens confirmados
         itensHtml = `<button class="ver-mais-btn" onclick="toggleItensConfirmados(this)" style="
-            background: none; 
-            border: 1px solid #007bff; 
-            color: #007bff; 
-            padding: 6px 12px; 
-            border-radius: 6px; 
-            cursor: pointer; 
+            background: none;
+            border: 1px solid #007bff;
+            color: #007bff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
             font-size: 0.85em;
             margin-bottom: 10px;
             transition: all 0.2s ease;
@@ -817,8 +847,14 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     } else {
         // Comportamento normal: mostra todos os itens
         pedido.itens.forEach(item => {
-            const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
-            itensHtml += `<li>${item.nome} (x${item.quantidade})${subTotal}</li>`;
+            const subTotal = (item.preco && item.quantidade) ? `R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+            const precoUnitario = `R$ ${item.preco.toFixed(2).replace('.', ',')}`;
+            itensHtml += `<li class="pedido-item">
+                <span class="item-nome">${item.nome}</span>
+                <span class="item-quantidade">x${item.quantidade}</span>
+                <span class="item-preco-unitario">${precoUnitario}</span>
+                <span class="item-preco">${subTotal}</span>
+            </li>`;
         });
     }
     
@@ -827,10 +863,16 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     // Só mostra seção "Itens Adicionados" se NÃO for um pedido novo
     if (pedido.itensAdicionados && pedido.itensAdicionados.length > 0 && !ehPedidoNovo) {
         console.log(`📋 Mostrando seção "Itens Adicionados" para pedido já confirmado`);
-        itensAdicionadosHtml += `<h4 style="margin-top: 8px; margin-bottom: 2px; color: #d9534f;">Itens Adicionados:</h4><ul style="margin-top: 0; margin-bottom: 8px;">`;
+        itensAdicionadosHtml += `<h4 class="itens-adicionados-titulo">Itens Adicionados:</h4>${headerHtml}<ul class="itens-adicionados-lista">`;
         pedido.itensAdicionados.forEach(item => {
-            const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
-            itensAdicionadosHtml += `<li style="color: #d9534f; font-weight: bold;">${item.nome} (x${item.quantidade})${subTotal}</li>`;
+            const subTotal = (item.preco && item.quantidade) ? `R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
+            const precoUnitario = `R$ ${item.preco.toFixed(2).replace('.', ',')}`;
+            itensAdicionadosHtml += `<li class="pedido-item item-adicionado">
+                <span class="item-nome">${item.nome}</span>
+                <span class="item-quantidade">x${item.quantidade}</span>
+                <span class="item-preco-unitario">${precoUnitario}</span>
+                <span class="item-preco">${subTotal}</span>
+            </li>`;
         });
         itensAdicionadosHtml += `</ul>`;
     } else if (ehPedidoNovo && pedido.itensAdicionados && pedido.itensAdicionados.length > 0) {
@@ -842,25 +884,21 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     let pedidosSection = '';
     
     if (ehPedidoNovo && hasNewItems) {
-        // PEDIDO NOVO: Estrutura especial sem <ul> (itens já estão formatados)
         pedidosSection = `
-            <p><strong>Pedidos:</strong></p>
+            ${headerHtml}
             <ul>${itensHtml}</ul>
             ${itensConfirmadosHtml}
             ${itensAdicionadosHtml}
         `;
     } else if (needsConfirmation && hasNewItems) {
-        // PEDIDO JÁ CONFIRMADO: Estrutura especial com botão "Ver mais"
         pedidosSection = `
-            <p><strong>Pedidos:</strong></p>
             ${itensHtml}
             ${itensConfirmadosHtml}
             ${itensAdicionadosHtml}
         `;
     } else {
-        // COMPORTAMENTO NORMAL: Estrutura padrão
         pedidosSection = `
-            <p><strong>Pedidos:</strong></p>
+            ${headerHtml}
             <ul>${itensHtml}</ul>
             ${itensAdicionadosHtml}
         `;
@@ -886,8 +924,6 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
 
     if (needsConfirmation) {
         pendentesContainer.prepend(pedidoDiv);
-        // Se tem itens novos, remove da lista de "vistos" para forçar reconfirmação
-        // Se tem itens novos E NÃO É um pedido novo, força reconfirmação
         if (hasNewItems && !ehPedidoNovo) {
             removePedidoFromSeen(pedidoId);
             console.log(`Pedido ${pedidoId} movido para pendentes devido a itens adicionados`);
@@ -903,7 +939,6 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         pedidoDiv.classList.add('pedido-novo'); // Verde para novos
     }
     
-    // Lógica de sincronização: só executa se o card não estiver na tela (ex: recarregamento da página)
     const cardExists = document.getElementById(pedidoId);
     if (!cardExists && wasConfirmedInFirebase && !hasBeenSeen && !hasNewItems) {
         addPedidoToSeen(pedidoId);
