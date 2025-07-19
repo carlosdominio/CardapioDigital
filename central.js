@@ -292,22 +292,10 @@ auth.onAuthStateChanged(user => {
                     
                     console.log(`✅ Pedido novo: ${itensConsolidados.length} itens únicos aguardando confirmação:`, itensConsolidados.map(i => `${i.nome} (x${i.quantidade})`));
                 } else {
-                    // LÓGICA ORIGINAL: Pedido já foi confirmado antes - mantém separação
+                    // LÓGICA CORRIGIDA: Pedido já foi confirmado antes. Apenas acumula os itens adicionados.
                     const combinedPending = [...existingPending, ...newPedidoData.itensAdicionados];
                     savePendingItems(pedidoId, combinedPending);
-                    
-                    // Se já tinha itens pendentes, todos ficam pendentes
-                    if (existingPending.length > 0) {
-                        console.log(`🔄 PEDIDO JÁ CONFIRMADO: Aplicando regra de todos pendentes`);
-                        
-                        const todosOsItens = [...(newPedidoData.itens || []), ...combinedPending];
-                        savePendingItems(pedidoId, todosOsItens);
-                        newPedidoData.itens = [];
-                        
-                        console.log(`✅ Todos os ${todosOsItens.length} itens agora estão pendentes`);
-                    } else {
-                        console.log(`ℹ️ Pedido já confirmado: Primeira vez recebendo itens adicionados - lógica original`);
-                    }
+                    console.log(`ℹ️ Pedido já confirmado: ${newPedidoData.itensAdicionados.length} novo(s) item(ns) adicionado(s) à lista pendente. Total pendente: ${combinedPending.length}`);
                 }
             }
 
