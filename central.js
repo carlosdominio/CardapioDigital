@@ -281,7 +281,8 @@ auth.onAuthStateChanged(user => {
                     console.log(`🆕 PEDIDO NOVO: Juntando todos os itens como um pedido único (mantendo layout visual)`);
                     
                     // Combina TODOS os itens (originais + pendentes + adicionados)
-                    const todosOsItens = [...(newPedidoData.itens || []), ...existingPending, ...newPedidoData.itensAdicionados];
+                    // Combina apenas os itens do Firebase (originais + adicionados), ignorando o que já estava na sessão
+                    const todosOsItens = [...(newPedidoData.itens || []), ...(newPedidoData.itensAdicionados || [])];
                     
                     // CONSOLIDA itens duplicados (soma quantidades ao invés de duplicar)
                     const itensConsolidados = consolidarItens(todosOsItens);
@@ -743,7 +744,7 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     const jaFoiVisto = hasBeenSeen;
     const ehPedidoNovo = !jaFoiConfirmado && !jaFoiVisto;
     
-    const needsConfirmation = (!hasBeenSeen && !wasConfirmedInFirebase) || hasNewItems;
+    const needsConfirmation = (!hasBeenSeen && !wasConfirmedInFirebase) || (hasNewItems && !ehPedidoNovo);
     
     let itensHtml = '';
     let itensConfirmadosHtml = '';
@@ -754,11 +755,9 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         // PEDIDO NOVO: Mostra todos os itens juntos na seção "Pedidos:"
         console.log(`🆕 RENDERIZAÇÃO PEDIDO NOVO: Mostrando todos os itens juntos`);
         
-        // Combina todos os itens (originais + adicionados) em uma única lista
-        const todosOsItens = [...(pedido.itens || []), ...(pedido.itensAdicionados || [])];
-        
-        // CONSOLIDA itens duplicados para exibição
-        const itensConsolidados = consolidarItens(todosOsItens);
+        // A lista `pendingItems` (recuperada da sessão) já está consolidada pela lógica 'child_changed'.
+        // Usa diretamente a lista, sem re-processar.
+        const itensConsolidados = pendingItems;
         
         itensConsolidados.forEach(item => {
             const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
@@ -857,7 +856,8 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     if (needsConfirmation) {
         pendentesContainer.prepend(pedidoDiv);
         // Se tem itens novos, remove da lista de "vistos" para forçar reconfirmação
-        if (hasNewItems) {
+        // Se tem itens novos E NÃO É um pedido novo, força reconfirmação
+        if (hasNewItems && !ehPedidoNovo) {
             removePedidoFromSeen(pedidoId);
             console.log(`Pedido ${pedidoId} movido para pendentes devido a itens adicionados`);
         }
@@ -879,23 +879,6 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         console.log(`Sincronizando pedido ${pedidoId} que foi confirmado no Firebase`);
     }
 
-    if (needsConfirmation) {
-        pendentesContainer.prepend(pedidoDiv);
-        // Se tem itens novos, remove da lista de "vistos" para forçar reconfirmação
-        if (hasNewItems) {
-            removePedidoFromSeen(pedidoId);
-            console.log(`Pedido ${pedidoId} movido para pendentes devido a itens adicionados`);
-        }
-    } else {
-        confirmadosContainer.prepend(pedidoDiv);
-    }
-
-    // Lógica de classe baseada no histórico de confirmação para garantir a cor correta
-    if (isOrderConfirmed(pedidoId)) {
-        pedidoDiv.classList.add('pedido-atualizado'); // Vermelho para atualizações
-    } else {
-        pedidoDiv.classList.add('pedido-novo'); // Verde para novos
-    }
 
     if (needsConfirmation) {
         pedidoDiv.classList.add('animating');
