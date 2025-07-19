@@ -174,6 +174,23 @@ function isOrderConfirmed(pedidoId) {
     return isConfirmed;
 }
 
+// --- LÓGICA DE SNAPSHOT DE ITENS CONFIRMADOS (LOCALSTORAGE) ---
+const CONFIRMED_ITEMS_KEY_PREFIX = 'confirmedItems_';
+
+function saveConfirmedItems(pedidoId, items) {
+    localStorage.setItem(CONFIRMED_ITEMS_KEY_PREFIX + pedidoId, JSON.stringify(items));
+    console.log(`Snapshot de itens confirmados salvo para o pedido ${pedidoId}`);
+}
+
+function getConfirmedItems(pedidoId) {
+    const items = localStorage.getItem(CONFIRMED_ITEMS_KEY_PREFIX + pedidoId);
+    return items ? JSON.parse(items) : null;
+}
+
+function clearConfirmedItems(pedidoId) {
+    localStorage.removeItem(CONFIRMED_ITEMS_KEY_PREFIX + pedidoId);
+    console.log(`Snapshot de itens confirmados removido para o pedido ${pedidoId}`);
+}
 // --- FUNÇÃO PARA ATUALIZAR CONTADOR DE PEDIDOS PENDENTES ---
 function atualizarContadorPendentes() {
     if (!contadorPendentes) return;
@@ -292,10 +309,11 @@ auth.onAuthStateChanged(user => {
                     
                     console.log(`✅ Pedido novo: ${itensConsolidados.length} itens únicos aguardando confirmação:`, itensConsolidados.map(i => `${i.nome} (x${i.quantidade})`));
                 } else {
-                    // LÓGICA CORRIGIDA: Pedido já foi confirmado antes. Apenas acumula os itens adicionados.
+                    // LÓGICA CORRIGIDA: Pedido já foi confirmado. Acumula e CONSOLIDA os itens adicionados.
                     const combinedPending = [...existingPending, ...newPedidoData.itensAdicionados];
-                    savePendingItems(pedidoId, combinedPending);
-                    console.log(`ℹ️ Pedido já confirmado: ${newPedidoData.itensAdicionados.length} novo(s) item(ns) adicionado(s) à lista pendente. Total pendente: ${combinedPending.length}`);
+                    const itensConsolidados = consolidarItens(combinedPending); // Consolida os itens pendentes
+                    savePendingItems(pedidoId, itensConsolidados);
+                    console.log(`ℹ️ Pedido já confirmado: Itens pendentes consolidados. Total pendente: ${itensConsolidados.length}`);
                 }
             }
 
@@ -322,6 +340,7 @@ auth.onAuthStateChanged(user => {
                 removePedidoFromSeen(pedidoId);
                 clearPendingItems(pedidoId);
                 removeOrderFromConfirmed(pedidoId);
+                clearConfirmedItems(pedidoId); // Limpa o snapshot de itens
                 console.log(`Dados locais limpos para o pedido: ${pedidoId}`);
                 atualizarContadorPendentes();
                 atualizarContadorConfirmados();
@@ -548,7 +567,7 @@ document.querySelector('main').addEventListener('click', (event) => {
             // Lógica original para pedidos já confirmados
             if (pedido.itensAdicionados) {
                 pedido.itensAdicionados.forEach(itemAdicionado => {
-                    const itemExistente = pedido.itens.find(item => item.id === itemAdicionado.id);
+                    const itemExistente = pedido.itens.find(item => item.nome === itemAdicionado.nome && item.preco === itemAdicionado.preco);
                     if (itemExistente) {
                         itemExistente.quantidade += itemAdicionado.quantidade;
                     } else {
@@ -568,6 +587,7 @@ document.querySelector('main').addEventListener('click', (event) => {
         addOrderToConfirmed(card.id); // Marca que este pedido já foi confirmado uma vez
         addPedidoToSeen(card.id); // Marca como visto ANTES de enviar para o Firebase
         clearPendingItems(card.id); // Limpa os itens pendentes da sessão
+        saveConfirmedItems(card.id, pedido.itens); // Salva o snapshot dos itens confirmados
         database.ref('pedidos/' + card.id).set(pedido);
         atualizarContadorPendentes(); // Atualiza o contador após confirmar
         atualizarContadorConfirmados(); // Atualiza o contador de confirmados
@@ -609,10 +629,17 @@ function handleRecusarPedido() {
         // Pedido existente: reverte as alterações usando .update() para não tocar no timestamp.
         
         // Recalcula o total com base nos itens já confirmados.
-        let novoTotal = 0;
-        pedido.itens.forEach(item => {
-            novoTotal += (item.preco * item.quantidade);
-        });
+        // Pega o snapshot confiável dos itens que foram confirmados.
+        const itensConfirmados = getConfirmedItems(card.id);
+
+        if (!itensConfirmados) {
+            console.error(`CRÍTICO: Não foi possível encontrar o snapshot de itens para o pedido ${card.id}. Abortando a recusa para evitar corrupção de dados.`);
+            closeRecusarModal();
+            return;
+        }
+
+        // Recalcula o total a partir do zero, usando APENAS o snapshot confiável.
+        const novoTotal = itensConfirmados.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
         const novoTotalString = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`;
 
         // Cria um objeto de atualização para o Firebase.
@@ -620,13 +647,14 @@ function handleRecusarPedido() {
         const updates = {
             total: novoTotalString,
             itensAdicionados: null,
-            versao: null
+            versao: null,
+            itens: itensConfirmados // Força a reversão da lista de itens no Firebase
         };
         
-        // Marca como "visto" para remover os botões de confirmação.
+        // Marca como "visto" novamente, pois a ação de recusar resolve a pendência.
         addPedidoToSeen(card.id);
         
-        console.log("O pedido foi confirmado. Atualizando com os seguintes dados:", JSON.stringify(updates));
+        console.log("Recusando itens adicionados. Revertendo para o estado confirmado com os seguintes dados:", JSON.stringify(updates));
         // Salva o estado revertido no Firebase usando update().
         database.ref('pedidos/' + card.id).update(updates);
 
@@ -762,6 +790,12 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
                 <h4 style="margin-top: 8px; margin-bottom: 8px; color: #6c757d; font-size: 0.9em;">Itens Já Confirmados:</h4>
                 <ul style="margin-top: 0; margin-bottom: 8px; opacity: 0.7;">`;
         
+        const itensConfirmadosSnapshot = getConfirmedItems(pedidoId);
+        if (itensConfirmadosSnapshot) {
+            console.log(`Usando snapshot de itens confirmados para o pedido ${pedidoId}`);
+            pedido.itens = itensConfirmadosSnapshot; // Sobrescreve com o snapshot local
+        }
+
         pedido.itens.forEach(item => {
             const subTotal = (item.preco && item.quantidade) ? ` - R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}` : '';
             itensConfirmadosHtml += `<li style="color: #6c757d;">${item.nome} (x${item.quantidade})${subTotal}</li>`;
@@ -832,7 +866,16 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         `;
     }
     
-    pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}${pedidosSection}<p class="total-pedido"><strong>Total:</strong> ${pedido.total}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
+    // Calcula o total para exibição, somando itens adicionados se houver
+    let totalParaExibir = pedido.total;
+    if (hasNewItems && !ehPedidoNovo) {
+        const totalItensOriginais = pedido.itens.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+        const totalItensAdicionados = pedido.itensAdicionados.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+        const novoTotal = totalItensOriginais + totalItensAdicionados;
+        totalParaExibir = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`;
+    }
+
+    pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}${pedidosSection}<p class="total-pedido"><strong>Total:</strong> ${totalParaExibir}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
     
     // Se foi confirmado no Firebase mas não está no localStorage, adiciona
     if (wasConfirmedInFirebase && !hasBeenSeen && !hasNewItems) {
@@ -860,11 +903,12 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         pedidoDiv.classList.add('pedido-novo'); // Verde para novos
     }
     
-    // Se foi confirmado no Firebase mas não está no localStorage, adiciona
-    if (wasConfirmedInFirebase && !hasBeenSeen && !hasNewItems) {
+    // Lógica de sincronização: só executa se o card não estiver na tela (ex: recarregamento da página)
+    const cardExists = document.getElementById(pedidoId);
+    if (!cardExists && wasConfirmedInFirebase && !hasBeenSeen && !hasNewItems) {
         addPedidoToSeen(pedidoId);
         addOrderToConfirmed(pedidoId);
-        console.log(`Sincronizando pedido ${pedidoId} que foi confirmado no Firebase`);
+        console.log(`Sincronizando pedido ${pedidoId} que foi confirmado no Firebase, mas não estava na tela.`);
     }
 
 
