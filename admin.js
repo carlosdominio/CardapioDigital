@@ -34,6 +34,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const editCategoryKeyInput = document.getElementById('edit-category-key');
     const editCategoryNameInput = document.getElementById('edit-category-name');
 
+    // --- REFERÊNCIAS DO MODAL DE SUCESSO ---
+    const successModal = document.getElementById('success-modal');
+    const successModalTitle = document.getElementById('success-modal-title');
+    const successModalMessage = document.getElementById('success-modal-message');
+    const successModalOkBtn = document.getElementById('success-modal-ok-btn');
+    const successModalCloseBtn = successModal.querySelector('.success-close-btn');
+
+    // --- FUNÇÃO PARA MOSTRAR MODAL DE SUCESSO ---
+    function showSuccessModal(message) {
+        successModalMessage.textContent = message;
+        successModal.style.display = 'block';
+    }
+
+    function closeSuccessModal() {
+        successModal.style.display = 'none';
+    }
+
+    successModalOkBtn.addEventListener('click', closeSuccessModal);
+    successModalCloseBtn.addEventListener('click', closeSuccessModal);
+
     // --- FUNÇÕES DE CATEGORIA ---
 
     // Adicionar nova categoria
@@ -267,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (updatedItem.nome && !isNaN(updatedItem.preco) && !isNaN(updatedItem.estoque) && updatedItem.imageUrl) {
             menuRef.child(categoryKey).child('itens').child(itemKey).set(updatedItem)
                 .then(() => {
-                    alert("Item atualizado com sucesso!");
+                    showSuccessModal("Item atualizado com sucesso!");
                     closeEditModal();
                 })
                 .catch(error => {

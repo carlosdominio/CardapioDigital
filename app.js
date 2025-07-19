@@ -98,25 +98,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function adicionarAoCarrinho(itemKey, categoryKey) {
         const itemNoCardapio = cardapioCompleto?.[categoryKey]?.itens?.[itemKey];
-
+    
         if (!itemNoCardapio || itemNoCardapio.estoque <= 0) {
-            alert("Este item não está disponível em estoque.");
+            showWarningModal("Lamento, mas este pedido não está mais disponível para venda em nosso estoque. Por favor, escolha outro pedido.");
             return;
         }
-
+    
         const itemExistente = carrinho.find(item => item.id === itemKey);
-
+    
         if (itemExistente) {
             if (itemExistente.quantidade < itemNoCardapio.estoque) {
                 itemExistente.quantidade++;
+                showToast(`${itemNoCardapio.nome} foi adicionado ao seu pedido!`);
             } else {
-                alert(`Você já atingiu o limite de estoque para ${itemExistente.nome}.`);
+                showWarningModal(`Lamento, mas este pedido não está mais disponível para venda em nosso estoque. Por favor, escolha outro pedido.`);
             }
         } else {
             carrinho.push({ ...itemNoCardapio, id: itemKey, quantidade: 1, categoryKey: categoryKey });
+            showToast(`${itemNoCardapio.nome} foi adicionado ao seu pedido!`);
         }
         renderizarCarrinho();
-        showToast(`${itemNoCardapio.nome} foi adicionado ao seu pedido!`);
     }
 
     function renderizarCarrinho() {
@@ -214,6 +215,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalInputContainer = document.getElementById('modal-input-container');
     const modalError = document.getElementById('modal-error');
     const modalActions = document.getElementById('modal-actions');
+
+    // --- LÓGICA DO MODAL DE AVISO ---
+    const warningModal = document.getElementById('warning-modal');
+    const warningModalMessage = document.getElementById('warning-modal-message');
+    const warningModalOkBtn = document.getElementById('warning-modal-ok-btn');
+
+    function showWarningModal(message) {
+        warningModalMessage.textContent = message;
+        warningModal.classList.add('visible');
+    }
+
+    function closeWarningModal() {
+        warningModal.classList.remove('visible');
+    }
+
+    warningModalOkBtn.addEventListener('click', closeWarningModal);
+    warningModal.addEventListener('click', (event) => {
+        if (event.target === warningModal) {
+            closeWarningModal();
+        }
+    });
 
     // --- LÓGICA DO MODAL ---
     let resolvePromise;

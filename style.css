@@ -922,3 +922,48 @@ main {
 #pendentes .pedido-card.animating::before {
     background: linear-gradient(90deg, #e74c3c, #ec7063) !important;
 }
+/* =================================
+   Modal de Aviso
+   ================================= */
+
+.warning-modal-content {
+    padding: 40px;
+    text-align: center;
+}
+
+.warning-icon {
+    margin-bottom: 20px;
+}
+
+.warning-modal-content h2 {
+    color: #f0ad4e; /* Laranja aviso */
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.warning-modal-content p {
+    font-size: 1.1em;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.warning-btn {
+    background-color: #f0ad4e;
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 5px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.warning-btn:hover {
+    background-color: #ec971f;
+}
+.modal-overlay.visible {
+    display: flex;
+    opacity: 1;
+    pointer-events: auto;
+}

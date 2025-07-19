@@ -332,6 +332,52 @@ body > header {
 }
 
 /* =================================
+   Estilos do Modal de Sucesso
+   ================================= */
+
+.success-modal-content {
+    text-align: center;
+    max-width: 450px;
+}
+
+.success-icon {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.success-modal-content h2 {
+    color: #5cb85c;
+    margin-bottom: 15px;
+    font-size: 1.8em;
+}
+
+.success-modal-content p {
+    color: #666;
+    font-size: 1.1em;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+.success-btn {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1.1em;
+    font-weight: 600;
+    transition: background-color 0.2s, transform 0.2s;
+    min-width: 120px;
+}
+
+.success-btn:hover {
+    background-color: #4cae4c;
+    transform: translateY(-1px);
+}
+
+/* =================================
    Responsividade
    ================================= */
 @media (max-width: 600px) {
@@ -362,4 +408,44 @@ body > header {
         width: 100%;
         justify-content: flex-start;
     }
+}
+/* =================================
+   Modal de Sucesso
+   ================================= */
+
+.success-modal-content {
+    padding: 40px;
+    text-align: center;
+}
+
+.success-icon {
+    margin-bottom: 20px;
+}
+
+.success-modal-content h2 {
+    color: #5cb85c; /* Verde sucesso */
+    margin-top: 0;
+    margin-bottom: 15px;
+}
+
+.success-modal-content p {
+    font-size: 1.1em;
+    color: #333;
+    margin-bottom: 30px;
+}
+
+.success-btn {
+    background-color: #5cb85c;
+    color: white;
+    border: none;
+    padding: 12px 40px;
+    border-radius: 5px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.success-btn:hover {
+    background-color: #4a934a;
 }
