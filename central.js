@@ -612,6 +612,40 @@ document.querySelector('main').addEventListener('click', (event) => {
 
 // --- LÓGICA DO MODAL DE CONFIRMAÇÃO DE RECUSA ---
 
+function devolverItensAoEstoque(itens) {
+    if (!itens || itens.length === 0) {
+        console.log("Nenhum item para devolver ao estoque.");
+        return;
+    }
+
+    itens.forEach(itemParaDevolver => {
+        const { id, quantidade, categoryKey } = itemParaDevolver;
+
+        if (!categoryKey || !id) {
+            console.error(`Item inválido, não foi possível devolver ao estoque:`, itemParaDevolver);
+            return;
+        }
+
+        const itemEstoqueRef = database.ref(`menu/${categoryKey}/itens/${id}/estoque`);
+
+        itemEstoqueRef.transaction((currentStock) => {
+            if (currentStock === null) {
+                // Se o item não existe mais no menu, não faz nada.
+                return currentStock;
+            }
+            // Adiciona a quantidade de volta ao estoque.
+            return currentStock + quantidade;
+        }, (error, committed, snapshot) => {
+            if (error) {
+                console.error(`Erro na transação de devolução de estoque para o item ${id}:`, error);
+            } else if (committed) {
+                console.log(`Estoque do item ${id} atualizado. Novo estoque: ${snapshot.val()}`);
+            }
+        });
+    });
+}
+
+
 function handleRecusarPedido() {
     if (!pedidoParaRecusar) return;
 
@@ -626,16 +660,19 @@ function handleRecusarPedido() {
 
     // Lógica robusta baseada no estado local (localStorage)
     if (isOrderConfirmed(card.id)) {
-        // Pedido existente: reverte as alterações usando .update() para não tocar no timestamp.
+        // Pedido existente: A recusa é apenas para os 'itensAdicionados'.
+        // Devolve apenas os itens adicionados ao estoque.
+        if (pedido.itensAdicionados && pedido.itensAdicionados.length > 0) {
+            devolverItensAoEstoque(pedido.itensAdicionados);
+        }
         
-        // Recalcula o total com base nos itens já confirmados.
         // Pega o snapshot confiável dos itens que foram confirmados.
-        const itensConfirmados = getConfirmedItems(card.id);
+        let itensConfirmados = getConfirmedItems(card.id);
 
+        // SALVAGUARDA: Se o snapshot local não for encontrado, usa os itens do próprio pedido como fallback.
         if (!itensConfirmados) {
-            console.error(`CRÍTICO: Não foi possível encontrar o snapshot de itens para o pedido ${card.id}. Abortando a recusa para evitar corrupção de dados.`);
-            closeRecusarModal();
-            return;
+            console.warn(`AVISO: Snapshot de itens não encontrado no localStorage para o pedido ${card.id}. Usando os itens do pedido como fallback.`);
+            itensConfirmados = pedido.itens;
         }
 
         // Recalcula o total a partir do zero, usando APENAS o snapshot confiável.
@@ -643,7 +680,6 @@ function handleRecusarPedido() {
         const novoTotalString = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`;
 
         // Cria um objeto de atualização para o Firebase.
-        // Passar `null` para uma chave a remove do banco de dados.
         const updates = {
             total: novoTotalString,
             itensAdicionados: null,
@@ -651,16 +687,17 @@ function handleRecusarPedido() {
             itens: itensConfirmados // Força a reversão da lista de itens no Firebase
         };
         
-        // Marca como "visto" novamente, pois a ação de recusar resolve a pendência.
         addPedidoToSeen(card.id);
         
         console.log("Recusando itens adicionados. Revertendo para o estado confirmado com os seguintes dados:", JSON.stringify(updates));
-        // Salva o estado revertido no Firebase usando update().
         database.ref('pedidos/' + card.id).update(updates);
 
     } else {
-        console.log("O pedido NÃO foi confirmado antes. Removendo o pedido inteiro:", card.id);
         // Pedido novo: a recusa significa que o pedido inteiro é removido.
+        // Devolve todos os itens do pedido ao estoque.
+        devolverItensAoEstoque(pedido.itens);
+        
+        console.log("O pedido NÃO foi confirmado antes. Removendo o pedido inteiro:", card.id);
         database.ref('pedidos/' + card.id).remove();
     }
 
