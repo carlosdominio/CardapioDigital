@@ -158,6 +158,14 @@ body.login-view>#app-content {
     }
 }
 
+@media (min-width: 488px) and (max-width: 568px) {
+    #logout-btn {
+        position: static;
+        transform: none;
+        max-width: 200px;
+    }
+}
+
 /* =================================
    Estilos do Modal de Ativação de Som
    ================================= */
@@ -475,9 +483,11 @@ body.login-view>#app-content {
 }
 
 /* Para telas maiores, exibe duas colunas na aba ativa */
-@media (min-width: 900px) {
+/* --- Layout para Tablets (768px - 1199px) --- */
+@media (min-width: 768px) {
     .tab-content.active {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr); /* 2 colunas de cards verticais */
+        gap: 15px;
     }
 }
 
@@ -513,38 +523,37 @@ main {
 }
 
 .pedido-item {
-    display: grid;
-    /* Define 4 colunas: nome, qtd, preço unitário, preço total */
-    grid-template-columns: 1fr 60px 90px 90px;
-    gap: 10px; /* Espaçamento entre as colunas */
-    align-items: start; /* Alinha os itens pelo topo para uma linha de base consistente */
-    padding: 8px 5px; /* Altura reduzida */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px 5px;
     border-bottom: 1px solid #eee;
+    gap: 10px;
 }
 
 .item-nome {
     font-weight: 600;
     color: #333;
-    white-space: normal;
+    flex-grow: 1; /* Permite que o nome ocupe o espaço disponível */
     word-break: break-word;
 }
 
-.item-quantidade {
-    font-weight: 500;
-    color: #555;
-    text-align: center;
-}
-
-.item-preco-unitario {
-    font-weight: 500;
-    color: #6c757d;
+.item-detalhes {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0; /* Impede que esta coluna encolha */
     text-align: right;
 }
 
 .item-preco {
     font-weight: 600;
     color: #007bff;
-    text-align: right;
+}
+
+.item-quantidade {
+    font-size: 0.9em;
+    color: #6c757d;
 }
 
 /* Estilos para itens já confirmados (quando visíveis) */
@@ -602,25 +611,7 @@ main {
     font-weight: bold;
 }
 .pedido-item-header {
-    display: grid;
-    grid-template-columns: 1fr 60px 90px 90px;
-    gap: 10px;
-    padding: 8px 5px;
-    border-bottom: 2px solid #dee2e6; /* Linha mais grossa para destacar */
-    margin-top: 10px;
-    font-weight: bold;
-    color: #495057;
-    font-size: 0.9em;
-}
-
-.pedido-item-header .item-quantidade,
-.pedido-item-header .item-preco-unitario,
-.pedido-item-header .item-preco {
-    text-align: center; /* Centraliza os títulos das colunas */
-}
-
-.pedido-item-header .item-preco {
-    text-align: right; /* Mantém o total alinhado à direita */
+    display: none; /* Oculta o cabeçalho da lista de itens em mobile */
 }
 /* =================================
    Responsividade da Lista de Itens
@@ -639,3 +630,130 @@ main {
         font-size: 0.8em;
     }
 }
+/* =================================
+   Estilos do Card de Pedido Horizontal
+   ================================= */
+
+/* --- Estilos Base (Mobile-First) --- */
+.pedido-card-horizontal {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 15px;
+    border: 1px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.pedido-card-horizontal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.pedido-info-cliente h3 {
+    font-size: 1.3em;
+    color: #343a40;
+    margin: 0 0 10px 0;
+}
+
+.pedido-info-cliente p {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin: 4px 0;
+}
+
+.pedido-info-cliente .codigo-mesa {
+    font-weight: bold;
+    color: #007bff;
+    font-size: 1em;
+    margin-top: 10px;
+    background-color: #e7f3ff;
+    padding: 5px 8px;
+    border-radius: 6px;
+    display: inline-block; /* Para não ocupar a largura toda */
+}
+
+.pedido-itens-container {
+    margin: 15px 0;
+}
+
+.pedido-total-acoes {
+    padding-top: 15px;
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.pedido-total-acoes .total-pedido {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #d9534f;
+    text-align: right;
+    margin-bottom: 15px;
+}
+
+.pedido-total-acoes .button-container {
+    display: flex;
+    flex-direction: column; /* Empilha os botões verticalmente */
+    align-items: center;   /* Centraliza os botões */
+    gap: 10px;
+}
+
+.pedido-total-acoes .card-btn {
+    width: 100%; /* Ocupa a largura disponível */
+    max-width: 280px; /* Limita a largura máxima */
+    padding: 12px 15px; /* Aumenta o padding vertical */
+    font-size: 1em;     /* Aumenta o tamanho da fonte */
+    font-weight: 600;
+}
+
+/* --- Layout para Desktops (1200px em diante) --- */
+@media (min-width: 1200px) {
+    .tab-content.active {
+        grid-template-columns: 1fr; /* 1 coluna de card horizontal */
+    }
+
+    .pedido-card-horizontal {
+        display: flex;
+        padding: 0;
+    }
+
+    .pedido-info-cliente {
+        flex: 0 0 220px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-right: 1px solid #e9ecef;
+    }
+
+    .pedido-itens-container {
+        flex-grow: 1;
+        padding: 15px 20px;
+        margin: 0;
+    }
+
+    .pedido-total-acoes {
+        flex: 0 0 200px;
+        padding: 20px;
+        margin: 0;
+        border-top: none;
+        border-left: 1px solid #e9ecef;
+        background-color: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .pedido-total-acoes .total-pedido {
+        font-size: 1.6em;
+        color: #28a745;
+    }
+
+    .pedido-total-acoes .button-container {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .pedido-total-acoes .card-btn {
+        width: 100%;
+    }
+}
+

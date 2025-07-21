@@ -196,7 +196,7 @@ function atualizarContadorPendentes() {
     if (!contadorPendentes) return;
     
     // Conta todos os pedidos que estão na aba pendentes (com classe animating)
-    const pedidosPendentes = document.querySelectorAll('.pedido-card.animating');
+    const pedidosPendentes = document.querySelectorAll('.pedido-card-horizontal.animating');
     const quantidade = pedidosPendentes.length;
     
     contadorPendentes.textContent = quantidade;
@@ -214,7 +214,7 @@ function atualizarContadorConfirmados() {
     if (!contadorConfirmados) return;
     
     // Conta todos os pedidos que estão na aba confirmados (sem classe animating)
-    const pedidosConfirmados = confirmadosContainer.querySelectorAll('.pedido-card:not(.animating)');
+    const pedidosConfirmados = confirmadosContainer.querySelectorAll('.pedido-card-horizontal:not(.animating)');
     const quantidade = pedidosConfirmados.length;
     
     contadorConfirmados.textContent = quantidade;
@@ -538,7 +538,7 @@ searchInput.addEventListener('input', () => {
 
 document.querySelector('main').addEventListener('click', (event) => {
     const target = event.target;
-    const card = target.closest('.pedido-card');
+    const card = target.closest('.pedido-card-horizontal');
     if (!card) return;
 
     if (target.classList.contains('confirmar-btn')) {
@@ -790,11 +790,13 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     }
 
     const pedidoDiv = document.createElement('div');
-    pedidoDiv.className = 'pedido-card';
+    pedidoDiv.className = 'pedido-card-horizontal';
     pedidoDiv.id = pedidoId;
     pedidoDiv.dataset.pedido = JSON.stringify(pedido);
 
-    const dataPedido = new Date(pedido.timestamp).toLocaleString('pt-BR');
+    const pedidoDate = new Date(pedido.timestamp);
+    const dataFormatada = pedidoDate.toLocaleDateString('pt-BR');
+    const horarioFormatado = pedidoDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
     // Verifica se o pedido já foi confirmado (tanto no localStorage quanto no Firebase)
     const seenPedidos = getSeenPedidos();
     const hasBeenSeen = seenPedidos.includes(pedidoId);
@@ -824,9 +826,10 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
             const precoUnitario = `R$ ${item.preco.toFixed(2).replace('.', ',')}`;
             itensHtml += `<li class="pedido-item">
                 <span class="item-nome">${item.nome}</span>
-                <span class="item-quantidade">x${item.quantidade}</span>
-                <span class="item-preco-unitario">${precoUnitario}</span>
-                <span class="item-preco">${subTotal}</span>
+                <div class="item-detalhes">
+                    <span class="item-preco">${subTotal}</span>
+                    <span class="item-quantidade">Qtd: ${item.quantidade} (Un: ${precoUnitario})</span>
+                </div>
             </li>`;
         });
         
@@ -855,9 +858,10 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
             const precoUnitario = `R$ ${item.preco.toFixed(2).replace('.', ',')}`;
             itensConfirmadosHtml += `<li class="pedido-item item-confirmado">
                 <span class="item-nome">${item.nome}</span>
-                <span class="item-quantidade">x${item.quantidade}</span>
-                <span class="item-preco-unitario">${precoUnitario}</span>
-                <span class="item-preco">${subTotalString}</span>
+                <div class="item-detalhes">
+                    <span class="item-preco">${subTotalString}</span>
+                    <span class="item-quantidade">Qtd: ${item.quantidade} (Un: ${precoUnitario})</span>
+                </div>
             </li>`;
         });
 
@@ -888,9 +892,10 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
             const precoUnitario = `R$ ${item.preco.toFixed(2).replace('.', ',')}`;
             itensHtml += `<li class="pedido-item">
                 <span class="item-nome">${item.nome}</span>
-                <span class="item-quantidade">x${item.quantidade}</span>
-                <span class="item-preco-unitario">${precoUnitario}</span>
-                <span class="item-preco">${subTotal}</span>
+                <div class="item-detalhes">
+                    <span class="item-preco">${subTotal}</span>
+                    <span class="item-quantidade">Qtd: ${item.quantidade} (Un: ${precoUnitario})</span>
+                </div>
             </li>`;
         });
     }
@@ -906,9 +911,10 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
             const precoUnitario = `R$ ${item.preco.toFixed(2).replace('.', ',')}`;
             itensAdicionadosHtml += `<li class="pedido-item item-adicionado">
                 <span class="item-nome">${item.nome}</span>
-                <span class="item-quantidade">x${item.quantidade}</span>
-                <span class="item-preco-unitario">${precoUnitario}</span>
-                <span class="item-preco">${subTotal}</span>
+                <div class="item-detalhes">
+                    <span class="item-preco">${subTotal}</span>
+                    <span class="item-quantidade">Qtd: ${item.quantidade} (Un: ${precoUnitario})</span>
+                </div>
             </li>`;
         });
         itensAdicionadosHtml += `</ul>`;
@@ -950,7 +956,28 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         totalParaExibir = `R$ ${novoTotal.toFixed(2).replace('.', ',')}`;
     }
 
-    pedidoDiv.innerHTML = `<h3>${mesaInfo}</h3><p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p><p><strong>Horário:</strong> ${dataPedido}</p><p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>${pedido.mesaCode ? `<p><strong>Código da Mesa:</strong> ${pedido.mesaCode}</p>` : ''}${pedidosSection}<p class="total-pedido"><strong>Total:</strong> ${totalParaExibir}</p><div class="button-container"><button class="card-btn concluir-btn">Fechar Conta</button><button class="card-btn gerar-pdf-btn">Gerar Comprovante</button></div>`;
+    pedidoDiv.innerHTML = `
+        <div class="pedido-info-cliente">
+            <div>
+                <h3>${mesaInfo}</h3>
+                <p><strong>Cliente:</strong> ${clienteInfo || 'Não informado'}</p>
+                <p><strong>Data:</strong> ${dataFormatada}</p>
+                <p><strong>Horário:</strong> ${horarioFormatado}</p>
+                <p><strong>Pagamento:</strong> ${formatarFormaPagamento(pedido.formaPagamento)}</p>
+            </div>
+            ${pedido.mesaCode ? `<p class="codigo-mesa">Cód: ${pedido.mesaCode}</p>` : ''}
+        </div>
+        <div class="pedido-itens-container">
+            ${pedidosSection}
+        </div>
+        <div class="pedido-total-acoes">
+            <p class="total-pedido">${totalParaExibir}</p>
+            <div class="button-container">
+                <button class="card-btn concluir-btn">Fechar Conta</button>
+                <button class="card-btn gerar-pdf-btn">Gerar Comprovante</button>
+            </div>
+        </div>
+    `;
     
     // Se foi confirmado no Firebase mas não está no localStorage, adiciona
     if (wasConfirmedInFirebase && !hasBeenSeen && !hasNewItems) {
@@ -989,8 +1016,8 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
         const buttonContainer = pedidoDiv.querySelector('.button-container');
         if (buttonContainer) {
             buttonContainer.innerHTML = `
-                <button class="card-btn confirmar-btn">Confirmar Pedido</button>
-                <button class="card-btn nao-confirmar-btn">Não Confirmar</button>
+                <button class="card-btn confirmar-btn">Confirmar</button>
+                <button class="card-btn nao-confirmar-btn">Recusar</button>
             `;
         }
         startTitleFlash('*** NOVO PEDIDO ***');
@@ -1057,7 +1084,7 @@ if (audioModal) {
 }
 // --- FUNÇÃO PARA TOGGLE DOS ITENS CONFIRMADOS ---
 function toggleItensConfirmados(button) {
-    const card = button.closest('.pedido-card');
+    const card = button.closest('.pedido-card-horizontal');
     const itensConfirmados = card.querySelector('.itens-confirmados');
     
     if (itensConfirmados.style.display === 'none') {
