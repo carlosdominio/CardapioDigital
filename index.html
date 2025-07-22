@@ -68,11 +68,40 @@
                 </ul>
             </div>
             <div class="cart-modal-footer">
-                <div class="forma-pagamento">
-                    <h3>Forma de Pagamento:</h3>
-                    <label><input type="radio" name="pagamento" value="pix" checked> Pix</label>
-                    <label><input type="radio" name="pagamento" value="cartao"> Cartão</label>
-                    <label><input type="radio" name="pagamento" value="dinheiro"> Dinheiro</label>
+                <div class="payment-methods">
+                    <h3 class="payment-methods-title">Forma de Pagamento:</h3>
+                    <div class="payment-dropdown">
+                        <div class="payment-selected">
+                            <div class="payment-selected-content">
+                                <span class="payment-selected-icon">📱</span>
+                                <span class="payment-selected-text">Pix</span>
+                            </div>
+                            <span class="payment-dropdown-arrow">▼</span>
+                        </div>
+                        <div class="payment-options">
+                            <div class="payment-method">
+                                <input type="radio" id="pix" name="pagamento" value="pix" checked>
+                                <label for="pix">
+                                    <span class="payment-method-icon">📱</span>
+                                    <span class="payment-method-name">Pix</span>
+                                </label>
+                            </div>
+                            <div class="payment-method">
+                                <input type="radio" id="cartao" name="pagamento" value="cartao">
+                                <label for="cartao">
+                                    <span class="payment-method-icon">💳</span>
+                                    <span class="payment-method-name">Cartão de Crédito/Débito</span>
+                                </label>
+                            </div>
+                            <div class="payment-method">
+                                <input type="radio" id="dinheiro" name="pagamento" value="dinheiro">
+                                <label for="dinheiro">
+                                    <span class="payment-method-icon">💵</span>
+                                    <span class="payment-method-name">Dinheiro</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="cart-total-section">
                     <p>Total: <span id="carrinho-total">R$ 0,00</span></p>

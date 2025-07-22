@@ -761,6 +761,128 @@ aside#carrinho {
     background-color: #f9f9f9;
 }
 
+/* Dropdown de Pagamento - Simples e Clean */
+.payment-methods {
+    margin-bottom: 20px;
+}
+
+.payment-methods-title {
+    font-size: 0.9em;
+    color: #333;
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.payment-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.payment-selected {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 15px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+.payment-selected:hover {
+    border-color: #999;
+}
+
+.payment-dropdown.open .payment-selected {
+    border-color: #007bff;
+    border-bottom-color: transparent;
+    border-radius: 6px 6px 0 0;
+}
+
+.payment-selected-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.payment-selected-icon {
+    font-size: 1.2em;
+}
+
+.payment-selected-text {
+    font-size: 0.9em;
+    color: #333;
+    font-weight: 500;
+}
+
+.payment-dropdown-arrow {
+    font-size: 0.8em;
+    color: #666;
+    transition: transform 0.2s ease;
+}
+
+.payment-dropdown.open .payment-dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.payment-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: #fff;
+    border: 1px solid #007bff;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 2001; /* Maior que o modal para aparecer por cima */
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease;
+}
+
+.payment-dropdown.open .payment-options {
+    max-height: 200px;
+}
+
+.payment-method input[type="radio"] {
+    display: none;
+}
+
+.payment-method label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.payment-method:last-child label {
+    border-bottom: none;
+}
+
+.payment-method label:hover {
+    background-color: #f8f9fa;
+}
+
+.payment-method input[type="radio"]:checked + label {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+.payment-method-icon {
+    font-size: 1.2em;
+    min-width: 20px;
+}
+
+.payment-method-name {
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
 .cart-modal-footer .forma-pagamento {
     margin-bottom: 15px;
     display: flex;
