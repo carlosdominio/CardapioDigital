@@ -510,3 +510,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// --- LÓGICA DO DROPDOWN DE PAGAMENTO ---
+document.addEventListener('DOMContentLoaded', () => {
+    const paymentDropdown = document.querySelector('.payment-dropdown');
+    if (paymentDropdown) {
+        const selected = paymentDropdown.querySelector('.payment-selected');
+        const options = paymentDropdown.querySelector('.payment-options');
+        const selectedText = paymentDropdown.querySelector('.payment-selected-text');
+        const selectedIcon = paymentDropdown.querySelector('.payment-selected-icon');
+
+        selected.addEventListener('click', (e) => {
+            e.stopPropagation();
+            paymentDropdown.classList.toggle('open');
+        });
+
+        options.addEventListener('click', (e) => {
+            const label = e.target.closest('label');
+            if (label) {
+                const radio = document.getElementById(label.getAttribute('for'));
+                if (radio) {
+                    const icon = label.querySelector('.payment-method-icon').textContent;
+                    const text = label.querySelector('.payment-method-name').textContent;
+
+                    selectedText.textContent = text;
+                    selectedIcon.textContent = icon;
+                    
+                    radio.checked = true;
+                    paymentDropdown.classList.remove('open');
+                }
+            }
+        });
+
+        // Fecha o dropdown se clicar fora dele
+        document.addEventListener('click', (e) => {
+            if (!paymentDropdown.contains(e.target)) {
+                paymentDropdown.classList.remove('open');
+            }
+        });
+    }
+});
