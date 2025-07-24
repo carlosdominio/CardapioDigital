@@ -1,0 +1,22 @@
+{
+  "enabled": true,
+  "name": "File Change Monitor",
+  "description": "Monitors file creation, modification, and deletion events across the digital menu system workspace to trigger appropriate AI agent responses",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "*.html",
+      "*.js",
+      "*.css",
+      "*.json",
+      "*.md",
+      "*.png",
+      "*.mp3"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A file has been modified in the digital menu system workspace. Please analyze the change and determine if any related files need to be updated, if there are any potential issues introduced, or if the change affects the system's functionality. Consider the file's role in the customer interface, order management, or admin panel."
+  }
+}

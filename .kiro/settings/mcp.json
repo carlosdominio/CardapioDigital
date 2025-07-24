@@ -1,4 +1,10 @@
 {
   "mcpServers": {
+    "aws-docs": {
+      "autoApprove": [
+        "mcp_aws_docs_search_documentation", 
+        "mcp_aws_docs_read_documentation"
+      ]
+    }
   }
 }

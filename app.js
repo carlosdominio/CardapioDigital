@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Atualiza o contador no botão flutuante
         cartItemCount.textContent = totalItems;
-        cartItemCount.style.display = totalItems > 0 ? 'flex' : 'none';
+        cartItemCount.style.display = 'flex'; // Sempre mostra o contador, mesmo quando zero
 
 
         const finalizarPedidoBtn = document.getElementById('finalizar-pedido');
