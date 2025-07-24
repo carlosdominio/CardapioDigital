@@ -1036,8 +1036,9 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
 // --- LÓGICA DO MODAL DE ATIVAÇÃO DE SOM ---
 
 function showAudioActivationModal() {
-    // Verifica se o usuário já interagiu (evita mostrar o modal novamente)
-    if (userHasInteracted || !audioModal) return;
+    // Verifica se o usuário escolheu não mostrar novamente
+    const dontShowAgain = localStorage.getItem('dontShowAudioModal') === 'true';
+    if (userHasInteracted || !audioModal || dontShowAgain) return;
     
     audioModal.classList.add('show');
 }
@@ -1049,21 +1050,36 @@ function hideAudioActivationModal() {
 }
 
 function activateSound() {
+    const dontShowCheckbox = document.getElementById('dont-show-again-checkbox');
+    const dontShowAgain = dontShowCheckbox && dontShowCheckbox.checked;
+    
     if (notificationSound) {
         notificationSound.play().then(() => {
             userHasInteracted = true;
+            if (dontShowAgain) {
+                localStorage.setItem('dontShowAudioModal', 'true');
+            }
             hideAudioActivationModal();
             console.log("Som ativado com sucesso!");
         }).catch(e => {
             console.error("Erro ao tentar ativar o som:", e);
             userHasInteracted = true;
+            if (dontShowAgain) {
+                localStorage.setItem('dontShowAudioModal', 'true');
+            }
             hideAudioActivationModal();
         });
     }
 }
 
 function skipSound() {
+    const dontShowCheckbox = document.getElementById('dont-show-again-checkbox');
+    const dontShowAgain = dontShowCheckbox && dontShowCheckbox.checked;
+    
     userHasInteracted = true;
+    if (dontShowAgain) {
+        localStorage.setItem('dontShowAudioModal', 'true');
+    }
     hideAudioActivationModal();
     console.log("Ativação de som foi pulada pelo usuário");
 }

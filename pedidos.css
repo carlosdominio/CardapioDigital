@@ -222,7 +222,28 @@ body.login-view>#app-content {
     font-size: 0.9em !important;
     color: #888 !important;
     font-style: italic;
-    margin-bottom: 25px !important;
+    margin-bottom: 15px !important;
+}
+
+.audio-modal-checkbox {
+    margin: 15px 0 20px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.audio-modal-checkbox label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #666;
+}
+
+.audio-modal-checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
 }
 
 .audio-modal-buttons {
