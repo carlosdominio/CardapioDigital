@@ -373,6 +373,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Adiciona os novos itens do carrinho na lista de "itensAdicionados"
         pedidoData.itensAdicionados = [...carrinho];
 
+        // Captura a forma de pagamento atual
+        const formaPagamentoRadios = document.querySelectorAll('input[name="pagamento"]');
+        let formaPagamento = '';
+        for (const radio of formaPagamentoRadios) {
+            if (radio.checked) {
+                formaPagamento = radio.value;
+                break;
+            }
+        }
+
         // Recalcula o total
         let newTotal = 0;
         pedidoData.itens.forEach(item => { newTotal += item.preco * item.quantidade; });
@@ -380,6 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
             pedidoData.itensAdicionados.forEach(item => { newTotal += item.preco * item.quantidade; });
         }
         pedidoData.total = `R$ ${newTotal.toFixed(2).replace('.', ',')}`;
+        
+        // Atualiza a forma de pagamento
+        if (formaPagamento) {
+            pedidoData.formaPagamento = formaPagamento;
+        }
         
         pedidoData.timestamp = new Date().toISOString();
         pedidoData.versao = (pedidoData.versao || 1) + 1;
@@ -497,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.warn(`Tentativa de compra do item ${id} com estoque insuficiente. Transação abortada.`);
                     return; // Aborta a transação
                 }
-            }, (error, committed, snapshot) => {
+            }, (error, committed) => {
                 if (error) {
                     console.error(`Erro na transação de estoque para o item ${id}:`, error);
                 } else if (!committed) {
