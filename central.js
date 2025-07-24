@@ -971,7 +971,10 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
             ${pedidosSection}
         </div>
         <div class="pedido-total-acoes">
-            <p class="total-pedido">${totalParaExibir}</p>
+            <div class="total-container">
+                <p class="total-label">Total:</p>
+                <p class="total-pedido">${totalParaExibir}</p>
+            </div>
             <div class="button-container">
                 <button class="card-btn concluir-btn">Fechar Conta</button>
                 <button class="card-btn gerar-pdf-btn">Gerar Comprovante</button>

@@ -553,13 +553,17 @@ main {
 
 .item-quantidade {
     font-size: 0.9em;
-    color: #6c757d;
+    color: #007bff !important;
 }
 
 /* Estilos para itens já confirmados (quando visíveis) */
-.item-confirmado .item-nome,
-.item-confirmado .item-quantidade {
+.item-confirmado .item-nome {
     color: #6c757d;
+    opacity: 0.8;
+}
+
+.item-confirmado .item-quantidade {
+    color: #007bff !important;
     opacity: 0.8;
 }
 .item-confirmado .item-preco {
@@ -577,9 +581,13 @@ main {
     font-weight: bold;
 }
 
-.item-adicionado .item-nome,
-.item-adicionado .item-quantidade {
+.item-adicionado .item-nome {
     color: #d9534f;
+    font-weight: bold;
+}
+
+.item-adicionado .item-quantidade {
+    color: #007bff !important;
     font-weight: bold;
 }
 
@@ -637,11 +645,14 @@ main {
 /* --- Estilos Base (Mobile-First) --- */
 .pedido-card-horizontal {
     background-color: #fff;
-    border-radius: 8px;
+    border-radius: 0; /* Remove border-radius no mobile */
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     padding: 15px;
     border: 1px solid #e9ecef;
+    border-left: none; /* Remove borda esquerda no mobile */
+    border-right: none; /* Remove borda direita no mobile */
     transition: all 0.3s ease;
+    margin: 0; /* Remove margem externa */
 }
 
 .pedido-card-horizontal:hover {
@@ -705,6 +716,37 @@ main {
     font-weight: 600;
 }
 
+/* --- Estilos específicos para Mobile --- */
+@media (max-width: 1199px) {
+    /* Remove padding das abas para ocupar toda largura */
+    .tab-content {
+        padding: 0;
+    }
+    
+    /* Layout horizontal do total no mobile */
+    .pedido-total-acoes .total-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin: 0 0 15px 0;
+    }
+    
+    .pedido-total-acoes .total-label {
+        color: #007bff;
+        font-size: 0.9em;
+        font-weight: bold;
+        margin: 0;
+    }
+    
+    .pedido-total-acoes .total-pedido {
+        font-size: 1.2em;
+        color: #d9534f;
+        margin: 0;
+    }
+}
+
 /* --- Layout para Desktops (1200px em diante) --- */
 @media (min-width: 1200px) {
     .tab-content.active {
@@ -744,7 +786,24 @@ main {
 
     .pedido-total-acoes .total-pedido {
         font-size: 1.6em;
-        color: #28a745;
+        color: #d9534f;
+    }
+
+    /* Container do total com layout vertical */
+    .pedido-total-acoes .total-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin: 0 0 15px 0;
+    }
+
+    /* Label "Total:" em cima */
+    .pedido-total-acoes .total-label {
+        color: #007bff !important;
+        font-size: 1em;
+        font-weight: bold;
+        margin: 0 0 5px 0;
     }
 
     .pedido-total-acoes .button-container {
