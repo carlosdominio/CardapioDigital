@@ -281,7 +281,18 @@ auth.onAuthStateChanged(user => {
         pedidosRef.on('child_changed', (snapshot) => {
             const pedidoId = snapshot.key;
             let newPedidoData = snapshot.val();
+            
+            console.log(`Pedido alterado: ${pedidoId}`, newPedidoData);
 
+            // Verifica se é uma recusa de itens adicionados
+            if (newPedidoData.recusaTimestamp) {
+                console.log(`Detectada recusa de itens adicionados no pedido ${pedidoId}`);
+                // Limpa os itens pendentes da sessão
+                clearPendingItems(pedidoId);
+                // Marca como visto para não mostrar como pendente
+                addPedidoToSeen(pedidoId);
+            }
+            
             // Acumula itens pendentes usando sessionStorage (LÓGICA ORIGINAL MANTIDA)
             if (newPedidoData.itensAdicionados && newPedidoData.itensAdicionados.length > 0) {
                 const existingPending = getPendingItems(pedidoId);
@@ -684,13 +695,23 @@ function handleRecusarPedido() {
             total: novoTotalString,
             itensAdicionados: null,
             versao: null,
-            itens: itensConfirmados // Força a reversão da lista de itens no Firebase
+            itens: itensConfirmados, // Força a reversão da lista de itens no Firebase
+            recusaTimestamp: new Date().getTime() // Adiciona timestamp para forçar detecção de mudança
         };
         
         addPedidoToSeen(card.id);
         
         console.log("Recusando itens adicionados. Revertendo para o estado confirmado com os seguintes dados:", JSON.stringify(updates));
-        database.ref('pedidos/' + card.id).update(updates);
+        
+        // Primeiro remove os itens adicionados completamente para garantir que o evento seja propagado
+        database.ref('pedidos/' + card.id + '/itensAdicionados').remove()
+            .then(() => {
+                // Depois atualiza o resto dos dados
+                return database.ref('pedidos/' + card.id).update(updates);
+            })
+            .catch(error => {
+                console.error("Erro ao recusar itens adicionados:", error);
+            });
 
     } else {
         // Pedido novo: a recusa significa que o pedido inteiro é removido.
