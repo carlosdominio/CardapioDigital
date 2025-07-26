@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const itemStockInput = document.getElementById('item-stock');
     const itemImageUrlInput = document.getElementById('item-image-url');
     const itemPromocaoInput = document.getElementById('item-promocao');
+    const itemLarguraSelect = document.getElementById('item-largura');
     const addItemBtn = document.getElementById('add-item-btn');
     const itemListDiv = document.getElementById('item-list');
 
@@ -30,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editItemStockInput = document.getElementById('edit-item-stock');
     const editItemImageUrlInput = document.getElementById('edit-item-image-url');
     const editItemPromocaoInput = document.getElementById('edit-item-promocao');
+    const editItemLarguraSelect = document.getElementById('edit-item-largura');
 
     const editCategoryModal = document.getElementById('edit-category-modal');
     const saveCategoryChangesBtn = document.getElementById('save-category-changes-btn');
@@ -202,7 +204,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 preco: itemPrice,
                 estoque: itemStock,
                 imageUrl: itemImageUrl,
-                promocao: itemPromocaoInput.checked
+                promocao: itemPromocaoInput.checked,
+                largura: itemLarguraSelect.value || 'normal'
             }).then(() => {
                 alert(`Item "${itemName}" adicionado com sucesso!`);
                 // Limpa o formulário
@@ -213,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemStockInput.value = '';
                 itemImageUrlInput.value = '';
                 itemPromocaoInput.checked = false;
+                itemLarguraSelect.value = 'normal';
             }).catch(error => {
                 console.error("Erro ao adicionar item: ", error);
                 alert("Erro ao adicionar item.");
@@ -264,6 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editItemStockInput.value = item.estoque;
         editItemImageUrlInput.value = item.imageUrl;
         editItemPromocaoInput.checked = item.promocao || false;
+        editItemLarguraSelect.value = item.largura || 'normal';
         editModal.style.display = 'block';
     }
 
@@ -291,7 +296,8 @@ document.addEventListener('DOMContentLoaded', () => {
             preco: parseFloat(editItemPriceInput.value),
             estoque: parseInt(editItemStockInput.value, 10),
             imageUrl: editItemImageUrlInput.value.trim(),
-            promocao: editItemPromocaoInput.checked
+            promocao: editItemPromocaoInput.checked,
+            largura: editItemLarguraSelect.value || 'normal'
         };
 
         if (updatedItem.nome && !isNaN(updatedItem.preco) && !isNaN(updatedItem.estoque) && updatedItem.imageUrl) {

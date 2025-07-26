@@ -50,6 +50,15 @@
                     <input type="checkbox" id="item-promocao" name="item-promocao">
                     <label for="item-promocao">Item em Promoção</label>
                 </div>
+                <div class="form-group">
+                    <label for="item-largura">Tamanho do Item:</label>
+                    <select id="item-largura" name="item-largura">
+                        <option value="normal">Normal (100% - padrão)</option>
+                        <option value="meio">Meio (50%)</option>
+                        <option value="um-terco">Um Terço (33.33%)</option>
+                        <option value="um-quarto">Um Quarto (25%)</option>
+                    </select>
+                </div>
                 <button id="add-item-btn">Adicionar Item</button>
             </div>
             <div class="list-container">
@@ -88,6 +97,14 @@
                 <input type="checkbox" id="edit-item-promocao" name="edit-item-promocao">
                 <label for="edit-item-promocao">Item em Promoção</label>
             </div>
+            
+            <label for="edit-item-largura">Tamanho do Item:</label>
+            <select id="edit-item-largura" name="edit-item-largura">
+                <option value="normal">Normal (100% - padrão)</option>
+                <option value="meio">Meio (50%)</option>
+                <option value="um-terco">Um Terço (33.33%)</option>
+                <option value="um-quarto">Um Quarto (25%)</option>
+            </select>
             
             <button id="save-item-changes-btn" class="save-changes-btn">Salvar Alterações</button>
         </div>

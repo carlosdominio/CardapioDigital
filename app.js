@@ -53,6 +53,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     itemDiv.classList.add('item-promocao');
                 }
                 
+                // Adiciona classe de largura personalizada
+                const largura = item.largura || 'normal';
+                itemDiv.classList.add(`item-largura-${largura}`);
+                
                 itemDiv.innerHTML = `
                     ${item.promocao ? '<div class="promocao-badge">🔥 PROMOÇÃO</div>' : ''}
                     <img src="${item.imageUrl}" alt="${item.nome}" class="item-image">

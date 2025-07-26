@@ -297,17 +297,20 @@ body > header {
 .modal-content input[type="text"],
 .modal-content input[type="number"],
 .modal-content input[type="url"],
-.modal-content textarea {
+.modal-content textarea,
+.modal-content select {
     width: 100%;
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 1em;
     transition: border-color 0.2s, box-shadow 0.2s;
+    background-color: #fff;
 }
 
 .modal-content input:focus,
-.modal-content textarea:focus {
+.modal-content textarea:focus,
+.modal-content select:focus {
     outline: none;
     border-color: #5cb85c;
     box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.2);
@@ -521,5 +524,126 @@ body > header {
     .checkbox-container input[type="checkbox"] {
         width: 16px;
         height: 16px;
+    }
+}
+
+/* =================================
+   Estilos do Campo de Largura Personalizada
+   ================================= */
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.95em;
+}
+
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    background-color: #fff;
+    color: #495057;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.form-group select:focus {
+    outline: none;
+    border-color: #5cb85c;
+    box-shadow: 0 0 0 3px rgba(92, 184, 92, 0.2);
+}
+
+.form-group select:hover {
+    border-color: #999;
+}
+
+/* Estilo especial para o select de largura */
+#item-largura,
+#edit-item-largura {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+}
+
+/* Opções do select com cores diferenciadas */
+#item-largura option,
+#edit-item-largura option {
+    padding: 8px;
+    font-size: 0.95em;
+}
+
+#item-largura option[value="normal"],
+#edit-item-largura option[value="normal"] {
+    background-color: #f8f9fa;
+    color: #495057;
+}
+
+#item-largura option[value="meio"],
+#edit-item-largura option[value="meio"] {
+    background-color: #e3f2fd;
+    color: #1976d2;
+}
+
+#item-largura option[value="um-terco"],
+#edit-item-largura option[value="um-terco"] {
+    background-color: #fff3e0;
+    color: #f57c00;
+}
+
+#item-largura option[value="um-quarto"],
+#edit-item-largura option[value="um-quarto"] {
+    background-color: #fce4ec;
+    color: #c2185b;
+}
+
+/* Indicador visual no modal de edição */
+.modal-content .form-group {
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+.modal-content .form-group label {
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #555;
+}
+
+/* Garante que o select no modal tenha o mesmo estilo personalizado */
+.modal-content #edit-item-largura {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    padding-right: 40px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+}
+
+/* Responsividade para o campo de largura */
+@media (max-width: 600px) {
+    .form-group select {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    
+    #item-largura,
+    #edit-item-largura {
+        background-size: 14px;
+        padding-right: 35px;
     }
 }
