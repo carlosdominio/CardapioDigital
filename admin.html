@@ -106,6 +106,12 @@
                 <option value="um-quarto">Um Quarto (25%)</option>
             </select>
             
+            <label for="edit-item-category">Categoria:</label>
+            <select id="edit-item-category" name="edit-item-category" required>
+                <option value="">Selecione uma Categoria</option>
+                <!-- Opções de categoria serão preenchidas dinamicamente -->
+            </select>
+            
             <button id="save-item-changes-btn" class="save-changes-btn">Salvar Alterações</button>
         </div>
     </div>
@@ -124,19 +130,102 @@
         </div>
     </div>
 
-    <!-- Modal de Sucesso -->
-    <div id="success-modal" class="modal">
-        <div class="modal-content success-modal-content">
-            <span class="close-btn success-close-btn">&times;</span>
-            <div class="success-icon">
+    <!-- Sistema de Modais Personalizados -->
+    
+    <!-- Modal de Informação (Azul) -->
+    <div id="info-modal" class="custom-modal">
+        <div class="custom-modal-content info-modal-content">
+            <span class="custom-close-btn">&times;</span>
+            <div class="modal-icon info-icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#5bc0de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </div>
+            <h2 id="info-title">Informação</h2>
+            <p id="info-message">Mensagem informativa.</p>
+            <div class="modal-buttons">
+                <button id="info-ok-btn" class="modal-btn info-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Sucesso (Verde) -->
+    <div id="success-modal" class="custom-modal">
+        <div class="custom-modal-content success-modal-content">
+            <span class="custom-close-btn">&times;</span>
+            <div class="modal-icon success-icon">
                 <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#5cb85c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22,4 12,14.01 9,11.01"></polyline>
                 </svg>
             </div>
-            <h2 id="success-modal-title">Sucesso!</h2>
-            <p id="success-modal-message">Sua operação foi concluída.</p>
-            <button id="success-modal-ok-btn" class="success-btn">OK</button>
+            <h2 id="success-title">Sucesso!</h2>
+            <p id="success-message">Operação realizada com sucesso!</p>
+            <div class="modal-buttons">
+                <button id="success-ok-btn" class="modal-btn success-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Aviso/Confirmação (Amarelo) -->
+    <div id="warning-modal" class="custom-modal">
+        <div class="custom-modal-content warning-modal-content">
+            <span class="custom-close-btn">&times;</span>
+            <div class="modal-icon warning-icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#f0ad4e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h2 id="warning-title">Atenção!</h2>
+            <p id="warning-message">Tem certeza que deseja continuar?</p>
+            <div class="modal-buttons">
+                <button id="warning-cancel-btn" class="modal-btn cancel-btn">Cancelar</button>
+                <button id="warning-confirm-btn" class="modal-btn warning-btn">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Erro (Vermelho) -->
+    <div id="error-modal" class="custom-modal">
+        <div class="custom-modal-content error-modal-content">
+            <span class="custom-close-btn">&times;</span>
+            <div class="modal-icon error-icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#d9534f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <h2 id="error-title">Erro!</h2>
+            <p id="error-message">Ocorreu um erro durante a operação.</p>
+            <div class="modal-buttons">
+                <button id="error-ok-btn" class="modal-btn error-btn">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Input Personalizado -->
+    <div id="input-modal" class="custom-modal">
+        <div class="custom-modal-content input-modal-content">
+            <span class="custom-close-btn">&times;</span>
+            <div class="modal-icon info-icon">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#5bc0de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </div>
+            <h2 id="input-title">Digite a informação</h2>
+            <p id="input-message">Por favor, insira o valor solicitado:</p>
+            <input type="text" id="input-field" placeholder="Digite aqui...">
+            <div class="modal-buttons">
+                <button id="input-cancel-btn" class="modal-btn cancel-btn">Cancelar</button>
+                <button id="input-confirm-btn" class="modal-btn info-btn">Confirmar</button>
+            </div>
         </div>
     </div>
 

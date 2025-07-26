@@ -33,29 +33,159 @@ document.addEventListener('DOMContentLoaded', () => {
     const editItemPromocaoInput = document.getElementById('edit-item-promocao');
     const editItemLarguraSelect = document.getElementById('edit-item-largura');
 
+
     const editCategoryModal = document.getElementById('edit-category-modal');
     const saveCategoryChangesBtn = document.getElementById('save-category-changes-btn');
     const editCategoryKeyInput = document.getElementById('edit-category-key');
     const editCategoryNameInput = document.getElementById('edit-category-name');
 
-    // --- REFERÊNCIAS DO MODAL DE SUCESSO ---
-    const successModal = document.getElementById('success-modal');
-    const successModalMessage = document.getElementById('success-modal-message');
-    const successModalOkBtn = document.getElementById('success-modal-ok-btn');
-    const successModalCloseBtn = successModal.querySelector('.success-close-btn');
+    // --- SISTEMA DE MODAIS PERSONALIZADOS ---
+    const modals = {
+        info: document.getElementById('info-modal'),
+        success: document.getElementById('success-modal'),
+        warning: document.getElementById('warning-modal'),
+        error: document.getElementById('error-modal'),
+        input: document.getElementById('input-modal')
+    };
 
-    // --- FUNÇÃO PARA MOSTRAR MODAL DE SUCESSO ---
-    function showSuccessModal(message) {
-        successModalMessage.textContent = message;
-        successModal.style.display = 'block';
+    // Elementos dos modais
+    const modalElements = {
+        info: {
+            title: document.getElementById('info-title'),
+            message: document.getElementById('info-message'),
+            okBtn: document.getElementById('info-ok-btn'),
+            closeBtn: modals.info.querySelector('.custom-close-btn')
+        },
+        success: {
+            title: document.getElementById('success-title'),
+            message: document.getElementById('success-message'),
+            okBtn: document.getElementById('success-ok-btn'),
+            closeBtn: modals.success.querySelector('.custom-close-btn')
+        },
+        warning: {
+            title: document.getElementById('warning-title'),
+            message: document.getElementById('warning-message'),
+            confirmBtn: document.getElementById('warning-confirm-btn'),
+            cancelBtn: document.getElementById('warning-cancel-btn'),
+            closeBtn: modals.warning.querySelector('.custom-close-btn')
+        },
+        error: {
+            title: document.getElementById('error-title'),
+            message: document.getElementById('error-message'),
+            okBtn: document.getElementById('error-ok-btn'),
+            closeBtn: modals.error.querySelector('.custom-close-btn')
+        },
+        input: {
+            title: document.getElementById('input-title'),
+            message: document.getElementById('input-message'),
+            field: document.getElementById('input-field'),
+            confirmBtn: document.getElementById('input-confirm-btn'),
+            cancelBtn: document.getElementById('input-cancel-btn'),
+            closeBtn: modals.input.querySelector('.custom-close-btn')
+        }
+    };
+
+    // --- FUNÇÕES DOS MODAIS PERSONALIZADOS ---
+    
+    // Função para mostrar modal de informação
+    function showInfoModal(title, message, callback = null) {
+        modalElements.info.title.textContent = title;
+        modalElements.info.message.textContent = message;
+        showModal('info');
+        
+        const handleClose = () => {
+            closeModal('info');
+            if (callback) callback();
+        };
+        
+        modalElements.info.okBtn.onclick = handleClose;
+        modalElements.info.closeBtn.onclick = handleClose;
     }
 
-    function closeSuccessModal() {
-        successModal.style.display = 'none';
+    // Função para mostrar modal de sucesso
+    function showSuccessModal(title, message, callback = null) {
+        modalElements.success.title.textContent = title;
+        modalElements.success.message.textContent = message;
+        showModal('success');
+        
+        const handleClose = () => {
+            closeModal('success');
+            if (callback) callback();
+        };
+        
+        modalElements.success.okBtn.onclick = handleClose;
+        modalElements.success.closeBtn.onclick = handleClose;
     }
 
-    successModalOkBtn.addEventListener('click', closeSuccessModal);
-    successModalCloseBtn.addEventListener('click', closeSuccessModal);
+    // Função para mostrar modal de aviso/confirmação
+    function showWarningModal(title, message, onConfirm = null, onCancel = null) {
+        modalElements.warning.title.textContent = title;
+        modalElements.warning.message.textContent = message;
+        showModal('warning');
+        
+        const handleConfirm = () => {
+            closeModal('warning');
+            if (onConfirm) onConfirm();
+        };
+        
+        const handleCancel = () => {
+            closeModal('warning');
+            if (onCancel) onCancel();
+        };
+        
+        modalElements.warning.confirmBtn.onclick = handleConfirm;
+        modalElements.warning.cancelBtn.onclick = handleCancel;
+        modalElements.warning.closeBtn.onclick = handleCancel;
+    }
+
+    // Função para mostrar modal de erro
+    function showErrorModal(title, message, callback = null) {
+        modalElements.error.title.textContent = title;
+        modalElements.error.message.textContent = message;
+        showModal('error');
+        
+        const handleClose = () => {
+            closeModal('error');
+            if (callback) callback();
+        };
+        
+        modalElements.error.okBtn.onclick = handleClose;
+        modalElements.error.closeBtn.onclick = handleClose;
+    }
+
+
+
+    // Funções auxiliares para mostrar/ocultar modais
+    function showModal(type) {
+        if (modals[type]) {
+            modals[type].classList.add('show');
+        }
+    }
+
+    function closeModal(type) {
+        if (modals[type]) {
+            modals[type].classList.remove('show');
+        }
+    }
+
+    // Event listeners globais para fechar modais
+    document.querySelectorAll('.custom-close-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const modal = e.target.closest('.custom-modal');
+            if (modal) {
+                modal.classList.remove('show');
+            }
+        });
+    });
+
+    // Fechar modal clicando fora do conteúdo
+    document.querySelectorAll('.custom-modal').forEach(modal => {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+            }
+        });
+    });
 
     // --- FUNÇÕES DE CATEGORIA ---
 
@@ -69,14 +199,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 nome: categoryName,
                 itens: {} // Inicia sem itens
             }).then(() => {
-                alert(`Categoria "${categoryName}" adicionada com sucesso!`);
+                showInfoModal("Categoria Adicionada", `Categoria "${categoryName}" foi adicionada com sucesso!`);
                 categoryNameInput.value = '';
             }).catch(error => {
                 console.error("Erro ao adicionar categoria: ", error);
-                alert("Erro ao adicionar categoria.");
+                showErrorModal("Erro", "Erro ao adicionar categoria. Tente novamente.");
             });
         } else {
-            alert("Por favor, insira um nome para a categoria.");
+            showInfoModal("Campo Obrigatório", "Por favor, insira um nome para a categoria.");
         }
     });
 
@@ -170,11 +300,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Deletar categoria
     function deleteCategory(categoryKey) {
-        if (confirm(`Tem certeza que deseja excluir a categoria e todos os seus itens?`)) {
-            menuRef.child(categoryKey).remove()
-                .then(() => alert("Categoria removida com sucesso!"))
-                .catch(error => console.error("Erro ao remover categoria: ", error));
-        }
+        showWarningModal(
+            "Confirmar Exclusão",
+            "Tem certeza que deseja excluir a categoria e todos os seus itens? Esta ação não pode ser desfeita.",
+            () => {
+                menuRef.child(categoryKey).remove()
+                    .then(() => showInfoModal("Categoria Removida", "A categoria foi removida com sucesso!"))
+                    .catch(error => {
+                        console.error("Erro ao remover categoria: ", error);
+                        showErrorModal("Erro", "Erro ao remover categoria. Tente novamente.");
+                    });
+            }
+        );
     }
 
     // Editar categoria
@@ -207,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 promocao: itemPromocaoInput.checked,
                 largura: itemLarguraSelect.value || 'normal'
             }).then(() => {
-                alert(`Item "${itemName}" adicionado com sucesso!`);
+                showSuccessModal("Sucesso!", `Item "${itemName}" adicionado com sucesso!`);
                 // Limpa o formulário
                 itemCategorySelect.value = '';
                 itemNameInput.value = '';
@@ -219,20 +356,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemLarguraSelect.value = 'normal';
             }).catch(error => {
                 console.error("Erro ao adicionar item: ", error);
-                alert("Erro ao adicionar item.");
+                showErrorModal("Erro", "Erro ao adicionar item. Tente novamente.");
             });
         } else {
-            alert("Por favor, preencha todos os campos do item corretamente.");
+            showInfoModal("Campos obrigatórios", "Por favor, preencha todos os campos do item corretamente.");
         }
     });
 
     // Deletar item
     function deleteItem(categoryKey, itemKey) {
-        if (confirm(`Tem certeza que deseja excluir este item?`)) {
-            menuRef.child(categoryKey).child('itens').child(itemKey).remove()
-                .then(() => alert("Item removido com sucesso!"))
-                .catch(error => console.error("Erro ao remover item: ", error));
-        }
+        showWarningModal(
+            "Confirmar Exclusão",
+            "Tem certeza que deseja excluir este item? Esta ação não pode ser desfeita.",
+            () => {
+                menuRef.child(categoryKey).child('itens').child(itemKey).remove()
+                    .then(() => showSuccessModal("Sucesso!", "Item removido com sucesso!"))
+                    .catch(error => {
+                        console.error("Erro ao remover item: ", error);
+                        showErrorModal("Erro", "Erro ao remover item. Tente novamente.");
+                    });
+            }
+        );
     }
 
     // --- FUNÇÕES DO MODAL ---
@@ -252,10 +396,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newName) {
             menuRef.child(categoryKey).child('nome').set(newName)
                 .then(() => {
-                    alert("Categoria atualizada com sucesso!");
+                    showSuccessModal("Sucesso!", "Categoria atualizada com sucesso!");
                     editCategoryModal.style.display = 'none';
                 })
-                .catch(error => console.error("Erro ao atualizar categoria: ", error));
+                .catch(error => {
+                    console.error("Erro ao atualizar categoria: ", error);
+                    showErrorModal("Erro", "Erro ao atualizar categoria. Tente novamente.");
+                });
+        } else {
+            showWarningModal("Campo obrigatório", "Por favor, insira um nome para a categoria.");
         }
     });
 
@@ -269,7 +418,38 @@ document.addEventListener('DOMContentLoaded', () => {
         editItemImageUrlInput.value = item.imageUrl;
         editItemPromocaoInput.checked = item.promocao || false;
         editItemLarguraSelect.value = item.largura || 'normal';
+        
+        // Popula o dropdown de categorias no modal de edição
+        populateEditCategoryDropdown(categoryKey);
+        
         editModal.style.display = 'block';
+    }
+
+    // Função para popular o dropdown de categorias no modal de edição
+    function populateEditCategoryDropdown(currentCategoryKey) {
+        const editItemCategorySelect = document.getElementById('edit-item-category');
+        if (!editItemCategorySelect) return;
+        
+        editItemCategorySelect.innerHTML = '<option value="">Selecione uma Categoria</option>';
+        
+        menuRef.once('value', (snapshot) => {
+            const menuData = snapshot.val();
+            if (menuData) {
+                for (const categoryKey in menuData) {
+                    const category = menuData[categoryKey];
+                    const option = document.createElement('option');
+                    option.value = categoryKey;
+                    option.textContent = category.nome;
+                    
+                    // Seleciona a categoria atual do item
+                    if (categoryKey === currentCategoryKey) {
+                        option.selected = true;
+                    }
+                    
+                    editItemCategorySelect.appendChild(option);
+                }
+            }
+        });
     }
 
     function closeEditModal() {
@@ -286,7 +466,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     saveChangesBtn.addEventListener('click', () => {
-        const categoryKey = editItemCategoryKeyInput.value;
+        const originalCategoryKey = editItemCategoryKeyInput.value;
+        const newCategoryKey = document.getElementById('edit-item-category').value;
         const itemKey = editItemIdInput.value;
         
         const updatedItem = {
@@ -300,20 +481,81 @@ document.addEventListener('DOMContentLoaded', () => {
             largura: editItemLarguraSelect.value || 'normal'
         };
 
-        if (updatedItem.nome && !isNaN(updatedItem.preco) && !isNaN(updatedItem.estoque) && updatedItem.imageUrl) {
-            menuRef.child(categoryKey).child('itens').child(itemKey).set(updatedItem)
-                .then(() => {
-                    showSuccessModal("Item atualizado com sucesso!");
-                    closeEditModal();
-                })
-                .catch(error => {
-                    console.error("Erro ao atualizar item: ", error);
-                    alert("Erro ao atualizar item.");
-                });
+        // Validação dos campos obrigatórios
+        if (!updatedItem.nome || isNaN(updatedItem.preco) || isNaN(updatedItem.estoque) || !updatedItem.imageUrl || !newCategoryKey) {
+            showInfoModal("Campos obrigatórios", "Por favor, preencha todos os campos corretamente, incluindo a categoria.");
+            return;
+        }
+
+        // Verifica se a categoria foi alterada
+        if (originalCategoryKey !== newCategoryKey) {
+            // Movimentação entre categorias
+            moveItemBetweenCategories(originalCategoryKey, newCategoryKey, itemKey, updatedItem);
         } else {
-            alert("Por favor, preencha todos os campos corretamente.");
+            // Atualização simples na mesma categoria
+            updateItemInSameCategory(originalCategoryKey, itemKey, updatedItem);
         }
     });
+
+    // Função para mover item entre categorias
+    function moveItemBetweenCategories(fromCategoryKey, toCategoryKey, itemKey, itemData) {
+        // Verifica se já existe um item com o mesmo nome na categoria de destino
+        menuRef.child(toCategoryKey).child('itens').once('value', (snapshot) => {
+            const existingItems = snapshot.val() || {};
+            const itemExists = Object.values(existingItems).some(item => 
+                item.nome.toLowerCase() === itemData.nome.toLowerCase()
+            );
+
+            if (itemExists) {
+                showWarningModal(
+                    "Item já existe",
+                    `Já existe um item com o nome "${itemData.nome}" na categoria de destino. Deseja continuar mesmo assim?`,
+                    () => {
+                        performItemMove(fromCategoryKey, toCategoryKey, itemKey, itemData);
+                    }
+                );
+            } else {
+                performItemMove(fromCategoryKey, toCategoryKey, itemKey, itemData);
+            }
+        });
+    }
+
+    // Função para executar a movimentação do item
+    function performItemMove(fromCategoryKey, toCategoryKey, itemKey, itemData) {
+        // Primeiro, adiciona o item na nova categoria
+        const newItemRef = menuRef.child(toCategoryKey).child('itens').push();
+        const newItemData = { ...itemData, id: newItemRef.key };
+
+        newItemRef.set(newItemData)
+            .then(() => {
+                // Remove o item da categoria original
+                return menuRef.child(fromCategoryKey).child('itens').child(itemKey).remove();
+            })
+            .then(() => {
+                showSuccessModal("Sucesso!", `Item "${itemData.nome}" foi movido para a nova categoria com sucesso!`);
+                closeEditModal();
+                
+                // Log da movimentação para histórico
+                console.log(`Item movido: ${itemData.nome} de ${fromCategoryKey} para ${toCategoryKey}`);
+            })
+            .catch(error => {
+                console.error("Erro ao mover item entre categorias: ", error);
+                showErrorModal("Erro", "Erro ao mover item entre categorias. Tente novamente.");
+            });
+    }
+
+    // Função para atualizar item na mesma categoria
+    function updateItemInSameCategory(categoryKey, itemKey, itemData) {
+        menuRef.child(categoryKey).child('itens').child(itemKey).set(itemData)
+            .then(() => {
+                showSuccessModal("Sucesso!", "Item atualizado com sucesso!");
+                closeEditModal();
+            })
+            .catch(error => {
+                console.error("Erro ao atualizar item: ", error);
+                showErrorModal("Erro", "Erro ao atualizar item. Tente novamente.");
+            });
+    }
 
     // --- CARREGAMENTO INICIAL ---
     loadAndDisplayData();
