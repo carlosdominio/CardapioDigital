@@ -46,6 +46,10 @@
                 <input type="number" id="item-price" placeholder="Preço (ex: 10.50)" step="0.01" required>
                 <input type="number" id="item-stock" placeholder="Quantidade em Estoque" step="1" required>
                 <input type="url" id="item-image-url" placeholder="URL da Imagem do Item" required>
+                <div class="checkbox-container">
+                    <input type="checkbox" id="item-promocao" name="item-promocao">
+                    <label for="item-promocao">Item em Promoção</label>
+                </div>
                 <button id="add-item-btn">Adicionar Item</button>
             </div>
             <div class="list-container">
@@ -80,6 +84,11 @@
             <label for="edit-item-image-url">URL da Imagem:</label>
             <input type="url" id="edit-item-image-url" required>
             
+            <div class="checkbox-container">
+                <input type="checkbox" id="edit-item-promocao" name="edit-item-promocao">
+                <label for="edit-item-promocao">Item em Promoção</label>
+            </div>
+            
             <button id="save-item-changes-btn" class="save-changes-btn">Salvar Alterações</button>
         </div>
     </div>
@@ -98,7 +107,7 @@
         </div>
     </div>
 
-<!-- Modal de Sucesso Genérico -->
+    <!-- Modal de Sucesso -->
     <div id="success-modal" class="modal">
         <div class="modal-content success-modal-content">
             <span class="close-btn success-close-btn">&times;</span>
@@ -111,21 +120,6 @@
             <h2 id="success-modal-title">Sucesso!</h2>
             <p id="success-modal-message">Sua operação foi concluída.</p>
             <button id="success-modal-ok-btn" class="success-btn">OK</button>
-        </div>
-    </div>
-    <!-- Modal de Sucesso -->
-    <div id="success-modal" class="modal">
-        <div class="modal-content success-modal-content">
-            <span class="close-btn">&times;</span>
-            <div class="success-icon">
-                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#5cb85c" stroke-width="2">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22,4 12,14.01 9,11.01"></polyline>
-                </svg>
-            </div>
-            <h2 id="success-title">Sucesso!</h2>
-            <p id="success-message">Operação realizada com sucesso!</p>
-            <button id="success-ok-btn" class="success-btn">OK</button>
         </div>
     </div>
 

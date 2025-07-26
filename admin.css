@@ -449,3 +449,77 @@ body > header {
 .success-btn:hover {
     background-color: #4a934a;
 }
+
+/* =================================
+   Estilos do Checkbox de Promoção
+   ================================= */
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 5px;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.checkbox-container:hover {
+    background-color: #f1f3f4;
+    border-color: #d1ecf1;
+}
+
+.checkbox-container input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #d9534f; /* Cor vermelha para combinar com promoção */
+}
+
+.checkbox-container label {
+    margin: 0;
+    font-weight: 600;
+    color: #495057;
+    cursor: pointer;
+    user-select: none;
+    font-size: 0.95em;
+}
+
+.checkbox-container input[type="checkbox"]:checked + label {
+    color: #d9534f;
+    font-weight: bold;
+}
+
+/* Estilo especial quando o checkbox está marcado */
+.checkbox-container:has(input[type="checkbox"]:checked) {
+    background-color: #fff5f5;
+    border-color: #f5c6cb;
+    box-shadow: 0 0 0 3px rgba(217, 83, 79, 0.1);
+}
+
+/* Animação quando o checkbox é marcado */
+.checkbox-container input[type="checkbox"]:checked {
+    animation: checkbox-bounce 0.3s ease-in-out;
+}
+
+@keyframes checkbox-bounce {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 600px) {
+    .checkbox-container {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    
+    .checkbox-container input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+    }
+}

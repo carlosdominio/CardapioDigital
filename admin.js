@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const itemPriceInput = document.getElementById('item-price');
     const itemStockInput = document.getElementById('item-stock');
     const itemImageUrlInput = document.getElementById('item-image-url');
+    const itemPromocaoInput = document.getElementById('item-promocao');
     const addItemBtn = document.getElementById('add-item-btn');
     const itemListDiv = document.getElementById('item-list');
 
@@ -28,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editItemPriceInput = document.getElementById('edit-item-price');
     const editItemStockInput = document.getElementById('edit-item-stock');
     const editItemImageUrlInput = document.getElementById('edit-item-image-url');
+    const editItemPromocaoInput = document.getElementById('edit-item-promocao');
 
     const editCategoryModal = document.getElementById('edit-category-modal');
     const saveCategoryChangesBtn = document.getElementById('save-category-changes-btn');
@@ -36,7 +38,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- REFERÊNCIAS DO MODAL DE SUCESSO ---
     const successModal = document.getElementById('success-modal');
-    const successModalTitle = document.getElementById('success-modal-title');
     const successModalMessage = document.getElementById('success-modal-message');
     const successModalOkBtn = document.getElementById('success-modal-ok-btn');
     const successModalCloseBtn = successModal.querySelector('.success-close-btn');
@@ -131,7 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             const itemLi = document.createElement('li');
                             
                             const itemNameSpan = document.createElement('span');
-                            itemNameSpan.textContent = `${item.nome} - R$ ${item.preco.toFixed(2)} (Estoque: ${item.estoque || 0})`;
+                            const promocaoText = item.promocao ? ' 🔥 PROMOÇÃO' : '';
+                            itemNameSpan.textContent = `${item.nome} - R$ ${item.preco.toFixed(2)} (Estoque: ${item.estoque || 0})${promocaoText}`;
+                            if (item.promocao) {
+                                itemNameSpan.style.color = '#d9534f';
+                                itemNameSpan.style.fontWeight = 'bold';
+                            }
                             itemLi.appendChild(itemNameSpan);
 
                             const buttonsDiv = document.createElement('div');
@@ -195,7 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 descricao: itemDescription,
                 preco: itemPrice,
                 estoque: itemStock,
-                imageUrl: itemImageUrl
+                imageUrl: itemImageUrl,
+                promocao: itemPromocaoInput.checked
             }).then(() => {
                 alert(`Item "${itemName}" adicionado com sucesso!`);
                 // Limpa o formulário
@@ -205,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemPriceInput.value = '';
                 itemStockInput.value = '';
                 itemImageUrlInput.value = '';
+                itemPromocaoInput.checked = false;
             }).catch(error => {
                 console.error("Erro ao adicionar item: ", error);
                 alert("Erro ao adicionar item.");
@@ -255,6 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editItemPriceInput.value = item.preco;
         editItemStockInput.value = item.estoque;
         editItemImageUrlInput.value = item.imageUrl;
+        editItemPromocaoInput.checked = item.promocao || false;
         editModal.style.display = 'block';
     }
 
@@ -281,7 +290,8 @@ document.addEventListener('DOMContentLoaded', () => {
             descricao: editItemDescriptionInput.value.trim(),
             preco: parseFloat(editItemPriceInput.value),
             estoque: parseInt(editItemStockInput.value, 10),
-            imageUrl: editItemImageUrlInput.value.trim()
+            imageUrl: editItemImageUrlInput.value.trim(),
+            promocao: editItemPromocaoInput.checked
         };
 
         if (updatedItem.nome && !isNaN(updatedItem.preco) && !isNaN(updatedItem.estoque) && updatedItem.imageUrl) {

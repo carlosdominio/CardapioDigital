@@ -47,7 +47,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'menu-item';
                 const isAvailable = item.estoque > 0;
+                
+                // Adiciona classe de promoção se o item estiver em promoção
+                if (item.promocao) {
+                    itemDiv.classList.add('item-promocao');
+                }
+                
                 itemDiv.innerHTML = `
+                    ${item.promocao ? '<div class="promocao-badge">🔥 PROMOÇÃO</div>' : ''}
                     <img src="${item.imageUrl}" alt="${item.nome}" class="item-image">
                     <h4>${item.nome}</h4>
                     <p class="item-descricao">${item.descricao}</p>
