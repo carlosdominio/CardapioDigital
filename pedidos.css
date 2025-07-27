@@ -166,137 +166,215 @@ body.login-view>#app-content {
     }
 }
 
-/* =================================
-   Estilos do Modal de Ativação de Som
-   ================================= */
+/* ===================================
+   ESTILOS DO SWITCH BUTTON DE SOM
+   =================================== */
 
-.audio-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-    animation: fadeIn 0.3s ease-out;
-}
-
-.audio-modal-overlay.show {
-    display: flex;
-}
-
-.audio-modal-content {
-    background: white;
-    padding: 40px 30px;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    max-width: 450px;
-    width: 90%;
-    animation: slideIn 0.3s ease-out;
-}
-
-.audio-modal-icon {
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: center;
-}
-
-.audio-modal-content h2 {
-    margin: 0 0 15px 0;
-    color: #333;
-    font-size: 1.5em;
-}
-
-.audio-modal-content p {
-    margin-bottom: 15px;
-    color: #666;
-    line-height: 1.5;
-    font-size: 1em;
-}
-
-.audio-modal-subtitle {
-    font-size: 0.9em !important;
-    color: #888 !important;
-    font-style: italic;
-    margin-bottom: 15px !important;
-}
-
-.audio-modal-checkbox {
-    margin: 15px 0 20px 0;
-    display: flex;
-    justify-content: center;
-}
-
-.audio-modal-checkbox label {
+.header-controls {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 15px;
+}
+
+/* Container do switch */
+.sound-toggle-btn {
+    position: relative;
+    width: 60px;
+    height: 32px;
+    background-color: #ccc;
+    border: none;
+    border-radius: 16px;
     cursor: pointer;
-    font-size: 0.9em;
-    color: #666;
+    transition: all 0.3s ease;
+    outline: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
 }
 
-.audio-modal-checkbox input[type="checkbox"] {
+.sound-toggle-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Estado ativo (som ligado) */
+.sound-toggle-btn.active {
+    background-color: #28a745;
+}
+
+/* Estado inativo (som desligado) */
+.sound-toggle-btn:not(.active) {
+    background-color: #dc3545;
+}
+
+/* Círculo deslizante */
+.sound-toggle-btn::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 28px;
+    height: 28px;
+    background-color: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Posição do círculo quando ativo */
+.sound-toggle-btn.active::before {
+    transform: translateX(28px);
+}
+
+/* Ícones dentro do círculo */
+.sound-icon {
+    position: absolute;
     width: 16px;
     height: 16px;
-    cursor: pointer;
+    transition: all 0.3s ease;
+    pointer-events: none;
 }
 
-.audio-modal-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
+/* Ícone de som ligado */
+.sound-on {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translateX(14px);
+    stroke: #28a745;
+    opacity: 0;
 }
 
-.audio-modal-buttons button {
-    padding: 12px 25px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1em;
-    font-weight: 600;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 120px;
-    justify-content: center;
+.sound-toggle-btn.active .sound-on {
+    opacity: 1;
 }
 
-.btn-primary {
-    background-color: #007bff;
+/* Ícone de som desligado */
+.sound-off {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translateX(-14px);
+    stroke: #dc3545;
+    opacity: 1;
+}
+
+.sound-toggle-btn.active .sound-off {
+    opacity: 0;
+}
+
+/* Animação de feedback quando clicado */
+.sound-toggle-btn.clicked {
+    animation: switchClick 0.2s ease;
+}
+
+@keyframes switchClick {
+    0% { transform: scale(1); }
+    50% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+}
+
+/* Efeito de brilho quando ativo */
+.sound-toggle-btn.active {
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.4);
+}
+
+.sound-toggle-btn:not(.active) {
+    box-shadow: 0 0 10px rgba(220, 53, 69, 0.4);
+}
+
+/* Tooltip personalizado */
+.sound-toggle-btn::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
     color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1000;
 }
 
-.btn-primary:hover {
-    background-color: #0056b3;
-    transform: translateY(-1px);
+.sound-toggle-btn:hover::after {
+    opacity: 1;
 }
 
-.btn-secondary {
-    background-color: #6c757d;
-    color: white;
-}
-
-.btn-secondary:hover {
-    background-color: #545b62;
-    transform: translateY(-1px);
-}
-
-@keyframes slideIn {
-    from {
-        transform: translateY(-20px);
-        opacity: 0;
+/* Responsividade */
+@media (max-width: 768px) {
+    .header-controls {
+        gap: 10px;
     }
+    
+    .sound-toggle-btn {
+        width: 54px;
+        height: 28px;
+        border-radius: 14px;
+    }
+    
+    .sound-toggle-btn::before {
+        width: 24px;
+        height: 24px;
+        top: 2px;
+        left: 2px;
+    }
+    
+    .sound-toggle-btn.active::before {
+        transform: translateX(26px);
+    }
+    
+    .sound-icon {
+        width: 14px;
+        height: 14px;
+    }
+    
+    .sound-on {
+        transform: translate(-50%, -50%) translateX(13px);
+    }
+    
+    .sound-off {
+        transform: translate(-50%, -50%) translateX(-13px);
+    }
+}
 
-    to {
-        transform: translateY(0);
-        opacity: 1;
+@media (max-width: 480px) {
+    .header-controls {
+        gap: 8px;
+    }
+    
+    .sound-toggle-btn {
+        width: 50px;
+        height: 26px;
+        border-radius: 13px;
+    }
+    
+    .sound-toggle-btn::before {
+        width: 22px;
+        height: 22px;
+    }
+    
+    .sound-toggle-btn.active::before {
+        transform: translateX(24px);
+    }
+    
+    .sound-icon {
+        width: 12px;
+        height: 12px;
+    }
+    
+    .sound-on {
+        transform: translate(-50%, -50%) translateX(12px);
+    }
+    
+    .sound-off {
+        transform: translate(-50%, -50%) translateX(-12px);
     }
 }
 
@@ -836,4 +914,3 @@ main {
         width: 100%;
     }
 }
-

@@ -31,7 +31,20 @@
             <div class="search-container">
                 <input type="text" id="search-input" placeholder="Buscar por cliente, mesa ou código...">
             </div>
-            <button id="logout-btn">Sair</button>
+            <div class="header-controls">
+                <button id="sound-toggle-btn" class="sound-toggle-btn active" title="Ativar/Desativar Som">
+                    <svg class="sound-icon sound-on" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5,6 9,2 9,2 15,6 15,11 19,11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.08"></path>
+                    </svg>
+                    <svg class="sound-icon sound-off" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="11 5,6 9,2 9,2 15,6 15,11 19,11 5"></polygon>
+                        <line x1="23" y1="9" x2="17" y2="15"></line>
+                        <line x1="17" y1="9" x2="23" y2="15"></line>
+                    </svg>
+                </button>
+                <button id="logout-btn">Sair</button>
+            </div>
         </header>
 
         <div class="tabs-container">
@@ -63,36 +76,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <audio id="notificationSound" src="notification.mp3" preload="auto"></audio>
 
-    <!-- Modal de Ativação de Som -->
-    <div id="audio-activation-modal" class="audio-modal-overlay">
-        <div class="audio-modal-content">
-            <div class="audio-modal-icon">
-                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#007bff" stroke-width="2">
-                    <polygon points="11 5,6 9,2 9,2 15,6 15,11 19,11 5"></polygon>
-                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.08"></path>
-                </svg>
-            </div>
-            <h2>Ativar Notificações Sonoras</h2>
-            <p>Para receber alertas sonoros quando chegarem novos pedidos, clique no botão abaixo.</p>
-            <p class="audio-modal-subtitle">Isso ajudará você a não perder nenhum pedido!</p>
-            <div class="audio-modal-checkbox">
-                <label>
-                    <input type="checkbox" id="dont-show-again-checkbox">
-                    <span>Não mostrar novamente</span>
-                </label>
-            </div>
-            <div class="audio-modal-buttons">
-                <button id="activate-sound-btn" class="btn-primary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="11 5,6 9,2 9,2 15,6 15,11 19,11 5"></polygon>
-                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.08"></path>
-                    </svg>
-                    Ativar Som
-                </button>
-                <button id="skip-sound-btn" class="btn-secondary">Pular</button>
-            </div>
-        </div>
-    </div>
+
 
     <!-- Modal de Confirmação de Recusa -->
     <div id="recusar-confirm-modal" class="recusa-modal-overlay">

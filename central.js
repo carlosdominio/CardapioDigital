@@ -20,10 +20,91 @@ const notificationSound = document.getElementById('notificationSound');
 const contadorPendentes = document.getElementById('contador-pendentes');
 const contadorConfirmados = document.getElementById('contador-confirmados');
 
-// Elementos do Modal de Ativação de Som
-const audioModal = document.getElementById('audio-activation-modal');
-const activateSoundBtn = document.getElementById('activate-sound-btn');
-const skipSoundBtn = document.getElementById('skip-sound-btn');
+// Elemento do Botão Toggle de Som
+const soundToggleBtn = document.getElementById('sound-toggle-btn');
+
+// --- SISTEMA DE CONTROLE DO BOTÃO TOGGLE DE SOM ---
+
+// Chave para localStorage
+const SOUND_PREFERENCE_KEY = 'soundPreference';
+
+// Inicializa o estado do botão toggle de som
+function initSoundToggle() {
+    if (!soundToggleBtn) return;
+    
+    // Verifica a preferência salva ou define como ativado por padrão
+    const soundPreference = localStorage.getItem(SOUND_PREFERENCE_KEY);
+    const isSoundEnabled = soundPreference !== 'disabled'; // Ativado por padrão
+    
+    updateSoundToggleState(isSoundEnabled);
+    
+    console.log('Botão toggle de som inicializado:', isSoundEnabled ? 'ativado' : 'desativado');
+}
+
+// Atualiza o estado visual do botão toggle
+function updateSoundToggleState(isEnabled) {
+    if (!soundToggleBtn) return;
+    
+    if (isEnabled) {
+        soundToggleBtn.classList.add('active');
+        soundToggleBtn.title = 'Som Ativado - Clique para desativar';
+        if (notificationSound) {
+            notificationSound.muted = false;
+        }
+    } else {
+        soundToggleBtn.classList.remove('active');
+        soundToggleBtn.title = 'Som Desativado - Clique para ativar';
+        if (notificationSound) {
+            notificationSound.muted = true;
+        }
+    }
+}
+
+// Ativa o som
+function enableSound() {
+    console.log('Som ativado');
+    localStorage.setItem(SOUND_PREFERENCE_KEY, 'enabled');
+    // Aqui você pode adicionar lógica adicional para ativar notificações sonoras
+    if (notificationSound) {
+        notificationSound.muted = false;
+    }
+}
+
+// Desativa o som
+function disableSound() {
+    console.log('Som desativado');
+    localStorage.setItem(SOUND_PREFERENCE_KEY, 'disabled');
+    // Aqui você pode adicionar lógica adicional para desativar notificações sonoras
+    if (notificationSound) {
+        notificationSound.muted = true;
+    }
+}
+
+// Event listener para o botão toggle de som
+if (soundToggleBtn) {
+    soundToggleBtn.addEventListener('click', () => {
+        const isCurrentlyEnabled = soundToggleBtn.classList.contains('active');
+        const newState = !isCurrentlyEnabled;
+        
+        // Adiciona animação de clique
+        soundToggleBtn.classList.add('clicked');
+        setTimeout(() => {
+            soundToggleBtn.classList.remove('clicked');
+        }, 300);
+        
+        // Atualiza o estado
+        updateSoundToggleState(newState);
+        
+        // Salva a preferência
+        if (newState) {
+            enableSound();
+        } else {
+            disableSound();
+        }
+        
+        console.log('Toggle de som:', newState ? 'ativado' : 'desativado');
+    });
+}
 
 // Elementos do Modal de Recusa
 let pedidoParaRecusar = null; // Armazena o card do pedido a ser recusado
@@ -266,10 +347,10 @@ auth.onAuthStateChanged(user => {
         toggleContent(true);
         resetInactivityTimer(); // Inicia o timer de inatividade no login
         
-        // Mostra o modal de ativação de som após um pequeno delay
+        // Inicializa o botão toggle de som
         setTimeout(() => {
-            showAudioActivationModal();
-        }, 1000);
+            initSoundToggle();
+        }, 500);
 
         pedidosRef.on('child_added', (snapshot) => {
             renderizarPedido(snapshot.val(), snapshot.key, false);
@@ -1054,74 +1135,7 @@ function renderizarPedido(pedido, pedidoId, isUpdate) {
     }
 }
 
-// --- LÓGICA DO MODAL DE ATIVAÇÃO DE SOM ---
 
-function showAudioActivationModal() {
-    // Verifica se o usuário escolheu não mostrar novamente
-    const dontShowAgain = localStorage.getItem('dontShowAudioModal') === 'true';
-    if (userHasInteracted || !audioModal || dontShowAgain) return;
-    
-    audioModal.classList.add('show');
-}
-
-function hideAudioActivationModal() {
-    if (audioModal) {
-        audioModal.classList.remove('show');
-    }
-}
-
-function activateSound() {
-    const dontShowCheckbox = document.getElementById('dont-show-again-checkbox');
-    const dontShowAgain = dontShowCheckbox && dontShowCheckbox.checked;
-    
-    if (notificationSound) {
-        notificationSound.play().then(() => {
-            userHasInteracted = true;
-            if (dontShowAgain) {
-                localStorage.setItem('dontShowAudioModal', 'true');
-            }
-            hideAudioActivationModal();
-            console.log("Som ativado com sucesso!");
-        }).catch(e => {
-            console.error("Erro ao tentar ativar o som:", e);
-            userHasInteracted = true;
-            if (dontShowAgain) {
-                localStorage.setItem('dontShowAudioModal', 'true');
-            }
-            hideAudioActivationModal();
-        });
-    }
-}
-
-function skipSound() {
-    const dontShowCheckbox = document.getElementById('dont-show-again-checkbox');
-    const dontShowAgain = dontShowCheckbox && dontShowCheckbox.checked;
-    
-    userHasInteracted = true;
-    if (dontShowAgain) {
-        localStorage.setItem('dontShowAudioModal', 'true');
-    }
-    hideAudioActivationModal();
-    console.log("Ativação de som foi pulada pelo usuário");
-}
-
-// Event listeners para o modal de ativação de som
-if (activateSoundBtn) {
-    activateSoundBtn.addEventListener('click', activateSound);
-}
-
-if (skipSoundBtn) {
-    skipSoundBtn.addEventListener('click', skipSound);
-}
-
-// Fecha o modal se clicar fora dele
-if (audioModal) {
-    audioModal.addEventListener('click', (event) => {
-        if (event.target === audioModal) {
-            skipSound();
-        }
-    });
-}
 // --- FUNÇÃO PARA TOGGLE DOS ITENS CONFIRMADOS ---
 function toggleItensConfirmados(button) {
     const card = button.closest('.pedido-card-horizontal');
