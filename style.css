@@ -86,10 +86,12 @@ h2 {
 }
 
 .item-preco {
-    font-weight: bold;
-    font-size: 1.1em;
+    font-weight: 500;
+    font-size: 1.2em;
     color: #333;
     margin-bottom: 15px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: 0.5px;
 }
 
 .add-carrinho-btn {
@@ -160,6 +162,8 @@ aside#carrinho {
 .item-subtotal {
     font-size: 0.9em;
     color: #666;
+    font-weight: 400;
+    margin-top: 4px;
 }
 
 .item-controls {
@@ -248,6 +252,20 @@ aside#carrinho {
 
     aside#carrinho {
         margin-top: 20px;
+    }
+    
+    /* Ajustes dos preços para mobile - estilo minimalista */
+    .item-preco {
+        font-size: 1.1em;
+        letter-spacing: 0.3px;
+    }
+}
+
+/* Ajustes para tablets - estilo minimalista */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .item-preco {
+        font-size: 1.15em;
+        letter-spacing: 0.4px;
     }
 }
 
@@ -477,10 +495,13 @@ aside#carrinho {
 }
 
 .total-pedido {
-    font-weight: bold;
+    font-weight: 500;
     text-align: right;
     font-size: 1.1em;
     margin-top: 15px;
+    color: #333;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: 0.3px;
 }
 
 /* Estilo Base para Botões no Card */
@@ -1192,12 +1213,14 @@ button svg {
     display: none;
 }
 
-/* Destaque no preço dos itens em promoção */
+/* Destaque no preço dos itens em promoção - estilo minimalista */
 .item-promocao .item-preco {
     color: #d9534f !important;
-    font-weight: bold !important;
+    font-weight: 600 !important;
     font-size: 1.3em !important;
-    text-shadow: 1px 1px 2px rgba(217, 83, 79, 0.2);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: 0.4px;
+    /* Remove todos os elementos decorativos para manter minimalismo */
 }
 
 /* Destaque no nome dos itens em promoção */
@@ -1516,9 +1539,10 @@ button svg {
     /* Isola a animação da tarja */
     isolation: isolate;
     contain: layout style paint;
-} -30px;
-    }
-    
+}
+
+/* Otimizações para dispositivos móveis */
+@media (max-width: 768px) {
     .item-promocao {
         animation-duration: 2.5s; /* Animação mais lenta em mobile */
     }
