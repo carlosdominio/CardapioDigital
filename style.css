@@ -1156,136 +1156,40 @@ button svg {
    ESTILOS PARA ITENS EM PROMOÇÃO
    =================================== */
 
-/* Item em promoção - destaque visual OTIMIZADO */
+/* Item em promoção - estilo visual limpo e consistente (mobile-first) */
 .menu-item.item-promocao {
     position: relative;
     border: 2px solid #d9534f !important;
-    box-shadow: 0 4px 15px rgba(217, 83, 79, 0.3) !important;
+    box-shadow: 0 2px 8px rgba(217, 83, 79, 0.2) !important;
     background: linear-gradient(135deg, #fff 0%, #fff9f9 100%);
-    overflow: hidden; /* Importante para a tarja diagonal */
-    
-    /* OTIMIZAÇÕES DE PERFORMANCE */
-    will-change: transform, box-shadow; /* Informa ao browser quais propriedades serão animadas */
-    transform: translateZ(0); /* Força aceleração de hardware */
-    backface-visibility: hidden; /* Evita flickering */
-    animation: promocao-pulse-optimized 3s ease-in-out infinite; /* Animação mais suave e lenta */
+    overflow: hidden;
+    /* Sem animações para manter consistência e performance */
 }
 
-/* Animação OTIMIZADA de pulsação para itens em promoção */
-@keyframes promocao-pulse-optimized {
-    0%, 100% {
-        transform: translateZ(0) scale(1);
-        box-shadow: 0 4px 15px rgba(217, 83, 79, 0.3);
-    }
-    50% {
-        transform: translateZ(0) scale(1.01); /* Reduzido de 1.02 para 1.01 */
-        box-shadow: 0 5px 18px rgba(217, 83, 79, 0.4); /* Menos intenso */
-    }
-}
-
-/* Animação original mantida para compatibilidade */
-@keyframes promocao-pulse {
-    0% {
-        box-shadow: 0 4px 15px rgba(217, 83, 79, 0.3);
-        transform: scale(1);
-    }
-    50% {
-        box-shadow: 0 6px 20px rgba(217, 83, 79, 0.5);
-        transform: scale(1.02);
-    }
-    100% {
-        box-shadow: 0 4px 15px rgba(217, 83, 79, 0.3);
-        transform: scale(1);
-    }
-}
-
-/* Tarja diagonal vermelha animada de promoção OTIMIZADA */
+/* Tarja diagonal vermelha - estilo mobile-first limpo */
 .promocao-badge {
     position: absolute;
     top: 15px;
     right: -35px;
     background: linear-gradient(45deg, #d9534f, #c9302c);
     color: white;
-    padding: 8px 45px;
-    font-size: 0.75em;
+    padding: 6px 35px;
+    font-size: 0.65em;
     font-weight: bold;
     text-transform: uppercase;
     z-index: 10;
-    box-shadow: 0 3px 10px rgba(217, 83, 79, 0.4);
-    letter-spacing: 0.8px;
-    transform: rotate(45deg) translateZ(0); /* Força aceleração de hardware */
+    box-shadow: 0 2px 6px rgba(217, 83, 79, 0.3);
+    letter-spacing: 0.6px;
+    transform: rotate(45deg);
     text-align: center;
-    min-width: 120px;
-    
-    /* OTIMIZAÇÕES DE PERFORMANCE */
-    will-change: box-shadow, background; /* Informa propriedades que serão animadas */
-    backface-visibility: hidden; /* Evita flickering */
-    animation: promocao-diagonal-pulse-optimized 3s ease-in-out infinite; /* Versão otimizada */
+    min-width: 100px;
+    /* Sem animações para consistência mobile-first */
 }
 
-/* Efeito de sombra adicional para a tarja diagonal */
-.promocao-badge::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, rgba(0,0,0,0.2), rgba(0,0,0,0.1));
-    z-index: -1;
-    transform: translateY(2px);
-    border-radius: inherit;
-}
-
-/* Animação OTIMIZADA de pulse para a tarja diagonal */
-@keyframes promocao-diagonal-pulse-optimized {
-    0%, 100% {
-        box-shadow: 0 3px 10px rgba(217, 83, 79, 0.4);
-        background: linear-gradient(45deg, #d9534f, #c9302c);
-    }
-    50% {
-        box-shadow: 0 4px 15px rgba(217, 83, 79, 0.6); /* Menos intenso */
-        background: linear-gradient(45deg, #e74c3c, #d9534f);
-    }
-}
-
-/* Animação original mantida para compatibilidade */
-@keyframes promocao-diagonal-pulse {
-    0%, 100% {
-        box-shadow: 0 3px 10px rgba(217, 83, 79, 0.4);
-        background: linear-gradient(45deg, #d9534f, #c9302c);
-    }
-    50% {
-        box-shadow: 0 5px 20px rgba(217, 83, 79, 0.7);
-        background: linear-gradient(45deg, #e74c3c, #d9534f);
-    }
-}
-
-/* Tarja diagonal adicional para maior destaque */
+/* Remove pseudo-elementos desnecessários para manter estilo limpo */
+.promocao-badge::before,
 .item-promocao::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 0;
-    height: 0;
-    border-style: solid;
-    border-width: 0 60px 60px 0;
-    border-color: transparent #d9534f transparent transparent;
-    z-index: 5;
-    animation: promocao-corner-pulse 2s infinite;
-}
-
-/* Animação para o canto triangular */
-@keyframes promocao-corner-pulse {
-    0%, 100% {
-        border-right-color: #d9534f;
-        opacity: 0.8;
-    }
-    50% {
-        border-right-color: #e74c3c;
-        opacity: 1;
-    }
+    display: none;
 }
 
 /* Destaque no preço dos itens em promoção */
@@ -1302,31 +1206,21 @@ button svg {
     font-weight: bold !important;
 }
 
-/* Botão especial para itens em promoção */
+/* Botão especial para itens em promoção - estilo consistente mobile-first */
 .item-promocao .add-carrinho-btn {
     background: linear-gradient(45deg, #d9534f, #c9302c) !important;
     color: white !important;
     font-weight: bold !important;
     text-transform: uppercase !important;
     letter-spacing: 0.5px !important;
-    box-shadow: 0 3px 10px rgba(217, 83, 79, 0.3) !important;
-    animation: promocao-button-glow 2s infinite;
+    box-shadow: 0 2px 6px rgba(217, 83, 79, 0.3) !important;
+    /* Sem animações para consistência */
 }
 
 .item-promocao .add-carrinho-btn:hover {
     background: linear-gradient(45deg, #c9302c, #a02622) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 5px 15px rgba(217, 83, 79, 0.4) !important;
-}
-
-/* Animação de brilho no botão de promoção */
-@keyframes promocao-button-glow {
-    0%, 100% {
-        box-shadow: 0 3px 10px rgba(217, 83, 79, 0.3);
-    }
-    50% {
-        box-shadow: 0 3px 15px rgba(217, 83, 79, 0.5);
-    }
+    transform: translateY(-1px) !important;
+    box-shadow: 0 3px 8px rgba(217, 83, 79, 0.4) !important;
 }
 
 /* ===================================
