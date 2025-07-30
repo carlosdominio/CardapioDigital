@@ -47,16 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'menu-item';
                 const isAvailable = item.estoque > 0;
-                
+
                 // Adiciona classe de promoção se o item estiver em promoção
                 if (item.promocao) {
                     itemDiv.classList.add('item-promocao');
                 }
-                
+
                 // Adiciona classe de largura personalizada
                 const largura = item.largura || 'normal';
                 itemDiv.classList.add(`item-largura-${largura}`);
-                
+
                 itemDiv.innerHTML = `
                     ${item.promocao ? '<div class="promocao-badge">🔥 PROMOÇÃO</div>' : ''}
                     <img src="${item.imageUrl}" alt="${item.nome}" class="item-image">
@@ -109,14 +109,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function adicionarAoCarrinho(itemKey, categoryKey) {
         const itemNoCardapio = cardapioCompleto?.[categoryKey]?.itens?.[itemKey];
-    
+
         if (!itemNoCardapio || itemNoCardapio.estoque <= 0) {
             showWarningModal("Lamento, mas este pedido não está mais disponível para venda em nosso estoque. Por favor, escolha outro pedido.");
             return;
         }
-    
+
         const itemExistente = carrinho.find(item => item.id === itemKey);
-    
+
         if (itemExistente) {
             if (itemExistente.quantidade < itemNoCardapio.estoque) {
                 itemExistente.quantidade++;
@@ -275,11 +275,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         modalActions.innerHTML = '';
-        
+
         // Detecta se é um modal com código da mesa para adicionar botão de copiar
         const isCodigoMesaModal = text.includes('código da mesa é:');
         let mesaCode = '';
-        
+
         if (isCodigoMesaModal) {
             // Extrai o código da mesa do texto
             const match = text.match(/código da mesa é:\s*([A-Z0-9]+)/i);
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 mesaCode = match[1];
             }
         }
-        
+
         if (cancelText) {
             const cancelBtn = document.createElement('button');
             cancelBtn.textContent = cancelText;
@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
             copyBtn.onclick = async () => {
                 try {
                     await navigator.clipboard.writeText(mesaCode);
-                    
+
                     // Feedback visual temporário
                     const originalHTML = copyBtn.innerHTML;
                     copyBtn.innerHTML = `
@@ -323,22 +323,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         Copiado!
                     `;
                     copyBtn.style.backgroundColor = '#28a745';
-                    
+
                     setTimeout(() => {
                         copyBtn.innerHTML = originalHTML;
                         copyBtn.style.backgroundColor = '';
                     }, 2000);
-                    
+
                 } catch (err) {
                     console.error('Erro ao copiar código:', err);
                     // Fallback para navegadores mais antigos
                     const textArea = document.createElement('textarea');
                     textArea.value = mesaCode;
+                    textArea.style.position = 'fixed';
+                    textArea.style.left = '-999999px';
+                    textArea.style.top = '-999999px';
                     document.body.appendChild(textArea);
+                    textArea.focus();
                     textArea.select();
-                    document.execCommand('copy');
+                    try {
+                        document.execCommand('copy');
+                    } catch (fallbackErr) {
+                        console.error('Fallback copy também falhou:', fallbackErr);
+                    }
                     document.body.removeChild(textArea);
-                    
+
                     // Feedback visual
                     const originalHTML = copyBtn.innerHTML;
                     copyBtn.innerHTML = `
@@ -348,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         Copiado!
                     `;
                     copyBtn.style.backgroundColor = '#28a745';
-                    
+
                     setTimeout(() => {
                         copyBtn.innerHTML = originalHTML;
                         copyBtn.style.backgroundColor = '';
@@ -364,7 +372,7 @@ document.addEventListener('DOMContentLoaded', () => {
         confirmBtn.onclick = () => {
             const inputField = document.getElementById('modal-input-field');
             const value = inputField ? inputField.value : true;
-            
+
             if (validation(value)) {
                 modal.classList.remove('visible');
                 if (resolvePromise) resolvePromise({ value, confirmed: true });
@@ -396,6 +404,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Inicia o fluxo principal
+        await iniciarFluxoPedido();
+    });
+
+    // Função principal do fluxo de pedido (recursiva para retornar ao início quando necessário)
+    async function iniciarFluxoPedido() {
         const { confirmed } = await showModal({ title: 'Código de Mesa', text: 'Você já possui um código de mesa?', confirmText: 'Sim', cancelText: 'Não' });
 
         if (confirmed) {
@@ -411,12 +425,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 errorMessage: 'O código não pode estar vazio.'
             });
 
-            if (!codeConfirmed) return;
+            if (!codeConfirmed) {
+                // Se cancelou, volta ao início
+                await iniciarFluxoPedido();
+                return;
+            }
 
             try {
                 const snapshot = await database.ref('pedidos').orderByChild('mesaCode').equalTo(enteredCode.toUpperCase()).once('value');
                 if (!snapshot.exists()) {
                     await showModal({ title: 'Erro', text: 'Código da mesa não encontrado. Verifique o código ou inicie um novo pedido.', confirmText: 'OK' });
+                    // Volta ao início após erro
+                    await iniciarFluxoPedido();
                     return;
                 }
 
@@ -432,13 +452,15 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (error) {
                 console.error("Erro ao buscar pedido por código:", error);
                 await showModal({ title: 'Erro de Conexão', text: 'Ocorreu um erro ao buscar seu pedido.', confirmText: 'OK' });
+                // Volta ao início após erro
+                await iniciarFluxoPedido();
             }
 
         } else {
             // Fluxo para quem NÃO TEM código
-            iniciarNovoPedido();
+            await iniciarNovoPedido();
         }
-    });
+    }
 
     async function atualizarPedidoExistente(pedidoId, pedidoData) {
         // Mescla itens adicionados anteriormente na lista principal
@@ -473,18 +495,18 @@ document.addEventListener('DOMContentLoaded', () => {
             pedidoData.itensAdicionados.forEach(item => { newTotal += item.preco * item.quantidade; });
         }
         pedidoData.total = `R$ ${newTotal.toFixed(2).replace('.', ',')}`;
-        
+
         // Atualiza a forma de pagamento
         if (formaPagamento) {
             pedidoData.formaPagamento = formaPagamento;
         }
-        
+
         pedidoData.timestamp = new Date().toISOString();
         pedidoData.versao = (pedidoData.versao || 1) + 1;
 
         try {
             await database.ref('pedidos/' + pedidoId).set(pedidoData);
-            
+
             darBaixaEstoque();
             carrinho.length = 0;
             renderizarCarrinho();
@@ -529,6 +551,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 let existingClientName = '';
                 snapshot.forEach(child => { existingClientName = child.val().cliente.split(' - ')[1]; });
                 await showModal({ title: 'Mesa Ocupada', text: `A mesa ${numeroMesa} já está ocupada por ${existingClientName}. Se o pedido for seu, use a opção "Já possuo um código".`, confirmText: 'OK' });
+                // Volta ao início do fluxo após mostrar mesa ocupada
+                await iniciarFluxoPedido();
                 return;
             }
 
@@ -551,12 +575,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const novoPedidoRef = database.ref('pedidos').push();
             await novoPedidoRef.set(pedido);
-            
+
             darBaixaEstoque();
             carrinho.length = 0;
             renderizarCarrinho();
             cartModal.classList.remove('visible'); // Fecha o modal do carrinho
-            
+
             await showModal({
                 title: 'Pedido Enviado!',
                 text: `Seu código da mesa é: ${newMesaCode}\nPor favor, anote-o para futuros pedidos.`,
@@ -633,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     selectedText.textContent = text;
                     selectedIcon.textContent = icon;
-                    
+
                     radio.checked = true;
                     paymentDropdown.classList.remove('open');
                 }
