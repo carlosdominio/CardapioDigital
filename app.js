@@ -203,18 +203,28 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarCarrinho();
 
     // --- LÓGICA DO MODAL DO CARRINHO ---
+    function updateBodyModalOpenClass() {
+        const anyModalOpen = cartModal.classList.contains('visible') ||
+            modal.classList.contains('visible') ||
+            warningModal.classList.contains('visible');
+        document.body.classList.toggle('modal-open', anyModalOpen);
+    }
+
     cartFab.addEventListener('click', () => {
         cartModal.classList.add('visible');
+        updateBodyModalOpenClass();
     });
 
     closeCartModalBtn.addEventListener('click', () => {
         cartModal.classList.remove('visible');
+        updateBodyModalOpenClass();
     });
 
     // Fecha o modal se clicar fora da área de conteúdo
     cartModal.addEventListener('click', (event) => {
         if (event.target === cartModal) {
             cartModal.classList.remove('visible');
+            updateBodyModalOpenClass();
         }
     });
 
@@ -235,10 +245,12 @@ document.addEventListener('DOMContentLoaded', () => {
     function showWarningModal(message) {
         warningModalMessage.textContent = message;
         warningModal.classList.add('visible');
+        updateBodyModalOpenClass();
     }
 
     function closeWarningModal() {
         warningModal.classList.remove('visible');
+        updateBodyModalOpenClass();
     }
 
     warningModalOkBtn.addEventListener('click', closeWarningModal);
@@ -275,15 +287,88 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         modalActions.innerHTML = '';
+        
+        // Detecta se é um modal com código da mesa para adicionar botão de copiar
+        const isCodigoMesaModal = text.includes('código da mesa é:');
+        let mesaCode = '';
+        
+        if (isCodigoMesaModal) {
+            // Extrai o código da mesa do texto
+            const match = text.match(/código da mesa é:\s*([A-Z0-9]+)/i);
+            if (match) {
+                mesaCode = match[1];
+            }
+        }
+        
         if (cancelText) {
             const cancelBtn = document.createElement('button');
             cancelBtn.textContent = cancelText;
             cancelBtn.className = 'modal-btn-cancel';
             cancelBtn.onclick = () => {
                 modal.classList.remove('visible');
+                updateBodyModalOpenClass();
                 if (resolvePromise) resolvePromise({ value: null, confirmed: false });
             };
             modalActions.appendChild(cancelBtn);
+        }
+
+        // Adiciona botão de copiar se for modal de código da mesa
+        if (isCodigoMesaModal && mesaCode) {
+            const copyBtn = document.createElement('button');
+            copyBtn.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                Copiar Código
+            `;
+            copyBtn.className = 'modal-btn-copy';
+            copyBtn.onclick = async () => {
+                try {
+                    await navigator.clipboard.writeText(mesaCode);
+                    
+                    // Feedback visual temporário
+                    const originalHTML = copyBtn.innerHTML;
+                    copyBtn.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                            <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                        Copiado!
+                    `;
+                    copyBtn.style.backgroundColor = '#28a745';
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalHTML;
+                        copyBtn.style.backgroundColor = '';
+                    }, 2000);
+                    
+                } catch (err) {
+                    console.error('Erro ao copiar código:', err);
+                    // Fallback para navegadores mais antigos
+                    const textArea = document.createElement('textarea');
+                    textArea.value = mesaCode;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    // Feedback visual
+                    const originalHTML = copyBtn.innerHTML;
+                    copyBtn.innerHTML = `
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                            <polyline points="20,6 9,17 4,12"></polyline>
+                        </svg>
+                        Copiado!
+                    `;
+                    copyBtn.style.backgroundColor = '#28a745';
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalHTML;
+                        copyBtn.style.backgroundColor = '';
+                    }, 2000);
+                }
+            };
+            modalActions.appendChild(copyBtn);
         }
 
         const confirmBtn = document.createElement('button');
@@ -295,6 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (validation(value)) {
                 modal.classList.remove('visible');
+                updateBodyModalOpenClass();
                 if (resolvePromise) resolvePromise({ value, confirmed: true });
             } else {
                 modalError.textContent = errorMessage;
@@ -303,6 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalActions.appendChild(confirmBtn);
 
         modal.classList.add('visible');
+        updateBodyModalOpenClass();
         if (inputType) {
             document.getElementById('modal-input-field').focus();
         }
@@ -484,6 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
             carrinho.length = 0;
             renderizarCarrinho();
             cartModal.classList.remove('visible'); // Fecha o modal do carrinho
+            updateBodyModalOpenClass();
             
             await showModal({
                 title: 'Pedido Enviado!',

@@ -483,6 +483,27 @@ aside#carrinho {
     color: white;
 }
 
+.modal-btn-copy {
+    background-color: #007bff;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    margin-right: 10px;
+}
+
+.modal-btn-copy:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.modal-btn-copy svg {
+    flex-shrink: 0;
+}
+
 /* Duplicate modal styles removed - keeping the first comprehensive definition */
 
 .pedido-card h3 {
@@ -1550,4 +1571,10 @@ button svg {
     .item-promocao .item-preco {
         font-size: 1.2em !important;
     }
+}
+
+/* Bloqueia o scroll do fundo quando um modal está aberto */
+.modal-open {
+    overflow: hidden !important;
+    height: 100vh !important;
 }

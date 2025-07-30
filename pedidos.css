@@ -914,3 +914,79 @@ main {
         width: 100%;
     }
 }
+
+/* =================================
+   Estilos do Indicador WhatsApp
+   ================================= */
+
+.whatsapp-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #e8f5e8;
+    border: 1px solid #25D366;
+    border-radius: 20px;
+    margin-top: 10px;
+    font-size: 0.85em;
+    color: #25D366;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.whatsapp-status:hover {
+    background-color: #d4f4d4;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2);
+}
+
+.whatsapp-status svg {
+    flex-shrink: 0;
+    animation: whatsappPulse 2s infinite;
+}
+
+.whatsapp-text {
+    font-size: 0.9em;
+    white-space: nowrap;
+}
+
+@keyframes whatsappPulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Responsividade do indicador WhatsApp */
+@media (max-width: 480px) {
+    .whatsapp-status {
+        padding: 6px 10px;
+        font-size: 0.8em;
+        gap: 6px;
+    }
+    
+    .whatsapp-status svg {
+        width: 16px;
+        height: 16px;
+    }
+    
+    .whatsapp-text {
+        font-size: 0.85em;
+    }
+}
+
+@media (min-width: 1200px) {
+    .whatsapp-status {
+        margin-top: 15px;
+        padding: 10px 15px;
+    }
+}

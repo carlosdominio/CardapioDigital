@@ -38,7 +38,88 @@ function getMimeType(filePath) {
     return mimeTypes[ext] || 'application/octet-stream';
 }
 
+
+
 const server = http.createServer((req, res) => {
+    // Adiciona headers CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+        res.writeHead(200);
+        res.end();
+        return;
+    }
+    
+    if (req.method === 'POST' && req.url === '/enviar-whatsapp') {
+        console.log('📨 Recebida requisição para enviar WhatsApp');
+        let body = '';
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+        req.on('end', async () => {
+            try {
+                const pedido = JSON.parse(body);
+                console.log('📋 Dados do pedido recebidos:', pedido.cliente);
+                
+                // Envia para o servidor WhatsApp persistente usando http nativo
+                const postData = JSON.stringify(pedido);
+                const options = {
+                    hostname: 'localhost',
+                    port: 3001,
+                    path: '/enviar',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(postData)
+                    }
+                };
+
+                const whatsappReq = http.request(options, (whatsappRes) => {
+                    let responseData = '';
+                    whatsappRes.on('data', (chunk) => {
+                        responseData += chunk;
+                    });
+                    whatsappRes.on('end', () => {
+                        try {
+                            const result = JSON.parse(responseData);
+                            if (result.status === 'ok') {
+                                console.log('✅ WhatsApp enviado com sucesso!');
+                                res.writeHead(200, { 'Content-Type': 'application/json' });
+                                res.end(JSON.stringify({ status: 'ok' }));
+                            } else {
+                                console.log('❌ Falha ao enviar WhatsApp:', result.message);
+                                res.writeHead(500, { 'Content-Type': 'application/json' });
+                                res.end(JSON.stringify({ status: 'erro', message: result.message }));
+                            }
+                        } catch (parseError) {
+                            console.error('❌ Erro ao parsear resposta WhatsApp:', parseError);
+                            res.writeHead(500, { 'Content-Type': 'application/json' });
+                            res.end(JSON.stringify({ status: 'erro', message: 'Erro na resposta do WhatsApp' }));
+                        }
+                    });
+                });
+
+                whatsappReq.on('error', (error) => {
+                    console.error('❌ Erro ao conectar com servidor WhatsApp:', error);
+                    res.writeHead(500, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ status: 'erro', message: 'Servidor WhatsApp indisponível' }));
+                });
+
+                whatsappReq.write(postData);
+                whatsappReq.end();
+                
+            } catch (e) {
+                console.error('❌ Erro ao processar pedido:', e);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ status: 'erro', message: 'Erro interno do servidor' }));
+            }
+        });
+        return;
+    }
+
     let filePath = req.url === '/' ? '/index.html' : req.url;
     filePath = path.join(__dirname, filePath);
 
