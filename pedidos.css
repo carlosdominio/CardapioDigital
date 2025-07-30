@@ -147,6 +147,12 @@ body.login-view>#app-content {
         font-size: 1.5em;
     }
 
+    .header-controls {
+        flex-direction: column;
+        gap: 12px;
+        align-items: center;
+    }
+
     #logout-btn {
         position: static;
         /* Reseta o posicionamento absoluto */

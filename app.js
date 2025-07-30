@@ -203,28 +203,18 @@ document.addEventListener('DOMContentLoaded', () => {
     renderizarCarrinho();
 
     // --- LÓGICA DO MODAL DO CARRINHO ---
-    function updateBodyModalOpenClass() {
-        const anyModalOpen = cartModal.classList.contains('visible') ||
-            modal.classList.contains('visible') ||
-            warningModal.classList.contains('visible');
-        document.body.classList.toggle('modal-open', anyModalOpen);
-    }
-
     cartFab.addEventListener('click', () => {
         cartModal.classList.add('visible');
-        updateBodyModalOpenClass();
     });
 
     closeCartModalBtn.addEventListener('click', () => {
         cartModal.classList.remove('visible');
-        updateBodyModalOpenClass();
     });
 
     // Fecha o modal se clicar fora da área de conteúdo
     cartModal.addEventListener('click', (event) => {
         if (event.target === cartModal) {
             cartModal.classList.remove('visible');
-            updateBodyModalOpenClass();
         }
     });
 
@@ -245,12 +235,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function showWarningModal(message) {
         warningModalMessage.textContent = message;
         warningModal.classList.add('visible');
-        updateBodyModalOpenClass();
     }
 
     function closeWarningModal() {
         warningModal.classList.remove('visible');
-        updateBodyModalOpenClass();
     }
 
     warningModalOkBtn.addEventListener('click', closeWarningModal);
@@ -306,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelBtn.className = 'modal-btn-cancel';
             cancelBtn.onclick = () => {
                 modal.classList.remove('visible');
-                updateBodyModalOpenClass();
                 if (resolvePromise) resolvePromise({ value: null, confirmed: false });
             };
             modalActions.appendChild(cancelBtn);
@@ -380,7 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             if (validation(value)) {
                 modal.classList.remove('visible');
-                updateBodyModalOpenClass();
                 if (resolvePromise) resolvePromise({ value, confirmed: true });
             } else {
                 modalError.textContent = errorMessage;
@@ -389,7 +375,6 @@ document.addEventListener('DOMContentLoaded', () => {
         modalActions.appendChild(confirmBtn);
 
         modal.classList.add('visible');
-        updateBodyModalOpenClass();
         if (inputType) {
             document.getElementById('modal-input-field').focus();
         }
@@ -571,7 +556,6 @@ document.addEventListener('DOMContentLoaded', () => {
             carrinho.length = 0;
             renderizarCarrinho();
             cartModal.classList.remove('visible'); // Fecha o modal do carrinho
-            updateBodyModalOpenClass();
             
             await showModal({
                 title: 'Pedido Enviado!',

@@ -1572,9 +1572,3 @@ button svg {
         font-size: 1.2em !important;
     }
 }
-
-/* Bloqueia o scroll do fundo quando um modal está aberto */
-.modal-open {
-    overflow: hidden !important;
-    height: 100vh !important;
-}
