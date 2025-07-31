@@ -15,13 +15,62 @@ function formatarResumoPedido(pedido) {
     throw new Error('Dados do pedido inválidos');
   }
 
-  let itens = pedido.itens.map(item => `- ${item.nome} x${item.quantidade} (R$ ${item.preco.toFixed(2)})`).join('\n');
-  const totalFormatado = typeof pedido.total === 'string' ? pedido.total : `R$ ${pedido.total.toFixed(2)}`;
-
   // Extrai apenas o nome do cliente (remove "Mesa X - ")
   const nomeCliente = pedido.cliente.includes(' - ') ? pedido.cliente.split(' - ')[1] : pedido.cliente;
+  
+  // Formata a forma de pagamento
+  const formaPagamento = pedido.formaPagamento || 'Não informado';
+  let formaPagamentoTexto = '';
+  switch(formaPagamento.toLowerCase()) {
+    case 'pix':
+      formaPagamentoTexto = '💳 PIX';
+      break;
+    case 'cartao':
+      formaPagamentoTexto = '💳 Cartão';
+      break;
+    case 'dinheiro':
+      formaPagamentoTexto = '💵 Dinheiro';
+      break;
+    default:
+      formaPagamentoTexto = `💳 ${formaPagamento}`;
+  }
 
-  return `*Novo pedido recebido!*\n\n📍 Mesa: ${pedido.numeroMesa}\n👤 *Cliente:* ${nomeCliente}\n🔑 Codigo da mesa: ${pedido.mesaCode}\n\n📋 *Itens:*\n${itens}\n\n💰 *Total:* ${totalFormatado}`;
+  let mensagem = `*Novo pedido recebido!*\n\n📍 Mesa: ${pedido.numeroMesa}\n👤 *Cliente:* ${nomeCliente}\n🔑 Codigo da mesa: ${pedido.mesaCode}\n💳 *Pagamento:* ${formaPagamentoTexto}\n\n`;
+
+  // Verifica se é um pedido com itens já confirmados + novos itens
+  const temItensAdicionados = pedido.itensAdicionados && Array.isArray(pedido.itensAdicionados) && pedido.itensAdicionados.length > 0;
+  const jaFoiConfirmado = pedido.jaConfirmado === true || pedido.confirmado === true;
+
+  if (temItensAdicionados && jaFoiConfirmado) {
+    // Pedido com itens já confirmados + novos itens
+    mensagem += `📋 *Itens Já Confirmados:*\n`;
+    const itensConfirmados = pedido.itens.map(item => `- ${item.nome} x${item.quantidade} (R$ ${item.preco.toFixed(2)})`).join('\n');
+    mensagem += `${itensConfirmados}\n\n`;
+    
+    mensagem += `🆕 *Novos Itens Adicionados:*\n`;
+    const itensAdicionados = pedido.itensAdicionados.map(item => `- ${item.nome} x${item.quantidade} (R$ ${item.preco.toFixed(2)})`).join('\n');
+    mensagem += `${itensAdicionados}\n\n`;
+    
+    // Calcula totais separados
+    const totalConfirmado = pedido.itens.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+    const totalAdicionado = pedido.itensAdicionados.reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
+    const totalGeral = totalConfirmado + totalAdicionado;
+    
+    mensagem += `💰 *Subtotal Confirmado:* R$ ${totalConfirmado.toFixed(2)}\n`;
+    mensagem += `💰 *Subtotal Adicionado:* R$ ${totalAdicionado.toFixed(2)}\n`;
+    mensagem += `💰 *TOTAL GERAL:* R$ ${totalGeral.toFixed(2)}`;
+    
+  } else {
+    // Pedido normal (novo ou sem itens adicionados)
+    mensagem += `📋 *Itens:*\n`;
+    const itens = pedido.itens.map(item => `- ${item.nome} x${item.quantidade} (R$ ${item.preco.toFixed(2)})`).join('\n');
+    mensagem += `${itens}\n\n`;
+    
+    const totalFormatado = typeof pedido.total === 'string' ? pedido.total : `R$ ${pedido.total.toFixed(2)}`;
+    mensagem += `💰 *Total:* ${totalFormatado}`;
+  }
+
+  return mensagem;
 }
 
 // Função para conectar ao WhatsApp (só executa uma vez)

@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 } catch (err) {
                     console.error('Erro ao copiar código:', err);
-                    // Fallback para navegadores mais antigos
+                    // Fallback para seleção manual
                     const textArea = document.createElement('textarea');
                     textArea.value = mesaCode;
                     textArea.style.position = 'fixed';
@@ -340,20 +340,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.body.appendChild(textArea);
                     textArea.focus();
                     textArea.select();
-                    try {
-                        document.execCommand('copy');
-                    } catch (fallbackErr) {
-                        console.error('Fallback copy também falhou:', fallbackErr);
-                    }
                     document.body.removeChild(textArea);
 
-                    // Feedback visual
+                    // Feedback visual mesmo sem cópia automática
                     const originalHTML = copyBtn.innerHTML;
                     copyBtn.innerHTML = `
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
                             <polyline points="20,6 9,17 4,12"></polyline>
                         </svg>
-                        Copiado!
+                        Selecionado!
                     `;
                     copyBtn.style.backgroundColor = '#28a745';
 
