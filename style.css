@@ -163,7 +163,7 @@ h2 {
 }
 
 .add-carrinho-btn {
-    background-color: #5cb85c; /* Verde */
+    background-color: #ff8c00; /* Laranja */
     color: white;
     border: none;
     padding: 10px 15px;
@@ -175,7 +175,7 @@ h2 {
 }
 
 .add-carrinho-btn:hover {
-    background-color: #4cae4c;
+    background-color: #e67e00;
 }
 
 .add-carrinho-btn:disabled {
@@ -1447,11 +1447,11 @@ button svg {
     
     /* Tarja diagonal simplificada para mobile */
     .promocao-badge {
-        font-size: 0.6em;
-        padding: 4px 25px;
-        top: 8px;
-        right: -25px;
-        min-width: 80px;
+        font-size: 0.9em;
+        padding: 8px 45px;
+        top: 15px;
+        right: -35px;
+        min-width: 120px;
         background: #d9534f !important; /* Cor sólida ao invés de gradiente */
         box-shadow: 0 1px 4px rgba(217, 83, 79, 0.3) !important; /* Sombra mínima */
         transform: rotate(45deg) !important; /* Apenas rotação, sem animação */
