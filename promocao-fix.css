@@ -1,0 +1,25 @@
+/* FORÇA PREÇOS BRANCOS - COMPATÍVEL COM NOVO DESIGN */
+.item-promocao .item-preco,
+.menu-item.item-promocao .item-preco,
+.categoria-container .item-promocao .item-preco,
+body .item-promocao .item-preco,
+html .item-promocao .item-preco {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #dc3545, #c82333) !important;
+    background-image: linear-gradient(135deg, #dc3545, #c82333) !important;
+    background-clip: initial !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: none !important;
+    border: 2px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: none !important;
+}
+
+.item-promocao .item-preco::before,
+.menu-item.item-promocao .item-preco::before,
+body .item-promocao .item-preco::before {
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-text-fill-color: #ffffff !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6) !important;
+}

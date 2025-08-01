@@ -59,7 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 itemDiv.innerHTML = `
                     ${item.promocao ? '<div class="promocao-badge">🔥 PROMOÇÃO</div>' : ''}
-                    <img src="${item.imageUrl}" alt="${item.nome}" class="item-image">
+                    <div class="item-image-container">
+                        <img src="${item.imageUrl}" alt="${item.nome}" class="item-image">
+                    </div>
                     <h4>${item.nome}</h4>
                     <p class="item-descricao">${item.descricao}</p>
                     <p class="item-preco">R$ ${item.preco.toFixed(2).replace('.', ',')}</p>
