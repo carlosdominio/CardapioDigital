@@ -1,5 +1,44 @@
+// ===================================
+//   CONFIGURAÇÃO DE LIMITE DE MESAS
+// ===================================
+// Para alterar os limites de mesa, modifique os valores abaixo:
+// - MINIMO: Menor número de mesa permitido
+// - MAXIMO: Maior número de mesa permitido  
+// - ATIVO: true = aplica limite | false = permite qualquer número
+// Configurações padrão (serão sobrescritas pelas configurações do Firebase)
+let LIMITE_MESAS = {
+    MINIMO: 1,      // Mesa mínima permitida
+    MAXIMO: 20,     // Mesa máxima permitida
+    ATIVO: true     // Se true, aplica o limite. Se false, permite qualquer número
+};
+
 function generateUniqueCode() {
     return Math.random().toString(36).substring(2, 8).toUpperCase(); // Gera um código alfanumérico de 6 caracteres
+}
+
+// Função para validar se o número da mesa está dentro do limite permitido
+function validarNumeroMesa(numeroMesa) {
+    if (!LIMITE_MESAS.ATIVO) {
+        return { valido: true, mensagem: '' };
+    }
+    
+    const numero = parseInt(numeroMesa);
+    
+    if (isNaN(numero)) {
+        return { 
+            valido: false, 
+            mensagem: 'Por favor, digite apenas números para a mesa.' 
+        };
+    }
+    
+    if (numero < LIMITE_MESAS.MINIMO || numero > LIMITE_MESAS.MAXIMO) {
+        return { 
+            valido: false, 
+            mensagem: `O número da mesa deve estar entre ${LIMITE_MESAS.MINIMO} e ${LIMITE_MESAS.MAXIMO}.` 
+        };
+    }
+    
+    return { valido: true, mensagem: '' };
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -12,6 +51,24 @@ document.addEventListener('DOMContentLoaded', () => {
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
     const menuRef = database.ref('menu');
+    
+    // Carrega configurações de limite de mesas do Firebase
+    function carregarConfiguracoesMesas() {
+        database.ref('configuracoes/app/limiteMesas').on('value', (snapshot) => {
+            const config = snapshot.val();
+            if (config) {
+                LIMITE_MESAS.ATIVO = config.ativo;
+                LIMITE_MESAS.MINIMO = config.minimo;
+                LIMITE_MESAS.MAXIMO = config.maximo;
+                console.log('Configurações de mesa atualizadas:', LIMITE_MESAS);
+            }
+        }, (error) => {
+            console.error("Erro ao carregar configurações de mesa:", error);
+        });
+    }
+    
+    // Carrega as configurações na inicialização
+    carregarConfiguracoesMesas();
 
     menuRef.on('value', (snapshot) => {
         const menuData = snapshot.val();
@@ -588,10 +645,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!nomeConfirmed) return;
 
         const { value: numeroMesa, confirmed: mesaConfirmed } = await showModal({
-            title: 'Número da Mesa', text: 'Por favor, digite o número da sua mesa:', inputType: 'number', inputPlaceholder: 'Nº da Mesa',
-            confirmText: 'Avançar', cancelText: 'Cancelar',
-            validation: val => /^\d+$/.test(val),
-            errorMessage: 'Por favor, digite apenas números para a mesa.'
+            title: 'Número da Mesa', 
+            text: LIMITE_MESAS.ATIVO 
+                ? `Por favor, digite o número da sua mesa (${LIMITE_MESAS.MINIMO} a ${LIMITE_MESAS.MAXIMO}):` 
+                : 'Por favor, digite o número da sua mesa:', 
+            inputType: 'number', 
+            inputPlaceholder: 'Nº da Mesa',
+            confirmText: 'Avançar', 
+            cancelText: 'Cancelar',
+            validation: val => {
+                const validacao = validarNumeroMesa(val);
+                if (!validacao.valido) {
+                    // Atualiza a mensagem de erro dinamicamente
+                    const modalError = document.getElementById('modal-error');
+                    if (modalError) {
+                        modalError.textContent = validacao.mensagem;
+                    }
+                }
+                return validacao.valido;
+            },
+            errorMessage: 'Número de mesa inválido.'
         });
         if (!mesaConfirmed) return;
 

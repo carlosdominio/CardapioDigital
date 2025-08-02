@@ -557,6 +557,182 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
+    // --- CONFIGURAÇÃO DE LIMITE DE MESAS ---
+    
+    // Referências dos elementos da configuração de mesas
+    const mesaLimiteAtivoCheckbox = document.getElementById('mesa-limite-ativo');
+    const mesaMinimoInput = document.getElementById('mesa-minimo');
+    const mesaMaximoInput = document.getElementById('mesa-maximo');
+    const mesaPreviewText = document.getElementById('mesa-preview-text');
+    const mesaRangeContainer = document.querySelector('.mesa-range-container');
+    const saveMesaConfigBtn = document.getElementById('save-mesa-config-btn');
+    const mesaPreview = document.querySelector('.mesa-preview');
+
+    // Referência para as configurações no Firebase
+    const configRef = database.ref('configuracoes/limiteMesas');
+
+    // Função para atualizar o preview
+    function atualizarPreview() {
+        const ativo = mesaLimiteAtivoCheckbox.checked;
+        const minimo = parseInt(mesaMinimoInput.value) || 1;
+        const maximo = parseInt(mesaMaximoInput.value) || 50;
+
+        if (ativo) {
+            mesaPreviewText.textContent = `Intervalo atual: Mesa ${minimo} a ${maximo}`;
+            mesaPreview.classList.add('ativo');
+            mesaRangeContainer.classList.remove('disabled');
+        } else {
+            mesaPreviewText.textContent = 'Intervalo atual: Desativado';
+            mesaPreview.classList.remove('ativo');
+            mesaRangeContainer.classList.add('disabled');
+        }
+    }
+
+    // Função para validar os valores dos inputs
+    function validarInputsMesa() {
+        const minimo = parseInt(mesaMinimoInput.value);
+        const maximo = parseInt(mesaMaximoInput.value);
+
+        if (isNaN(minimo) || minimo < 1) {
+            mesaMinimoInput.value = 1;
+        }
+
+        if (isNaN(maximo) || maximo < 1) {
+            mesaMaximoInput.value = 50;
+        }
+
+        if (minimo >= maximo) {
+            mesaMaximoInput.value = minimo + 1;
+        }
+
+        atualizarPreview();
+    }
+
+    // Event listeners para a configuração de mesas
+    mesaLimiteAtivoCheckbox.addEventListener('change', atualizarPreview);
+    mesaMinimoInput.addEventListener('input', validarInputsMesa);
+    mesaMaximoInput.addEventListener('input', validarInputsMesa);
+
+    // Função para carregar configurações existentes
+    function carregarConfiguracoesMesa() {
+        configRef.once('value', (snapshot) => {
+            const config = snapshot.val();
+            if (config) {
+                mesaLimiteAtivoCheckbox.checked = config.ativo || false;
+                mesaMinimoInput.value = config.minimo || 1;
+                mesaMaximoInput.value = config.maximo || 50;
+            } else {
+                // Valores padrão
+                mesaLimiteAtivoCheckbox.checked = true;
+                mesaMinimoInput.value = 1;
+                mesaMaximoInput.value = 50;
+            }
+            atualizarPreview();
+        }).catch(error => {
+            console.error("Erro ao carregar configurações de mesa:", error);
+            // Valores padrão em caso de erro
+            mesaLimiteAtivoCheckbox.checked = true;
+            mesaMinimoInput.value = 1;
+            mesaMaximoInput.value = 50;
+            atualizarPreview();
+        });
+    }
+
+    // Função para salvar configurações
+    saveMesaConfigBtn.addEventListener('click', () => {
+        const ativo = mesaLimiteAtivoCheckbox.checked;
+        const minimo = parseInt(mesaMinimoInput.value) || 1;
+        const maximo = parseInt(mesaMaximoInput.value) || 50;
+
+        // Validação final
+        if (minimo >= maximo) {
+            showWarningModal(
+                "Valores Inválidos",
+                "O número máximo de mesa deve ser maior que o mínimo. Por favor, corrija os valores."
+            );
+            return;
+        }
+
+        const configuracao = {
+            ativo: ativo,
+            minimo: minimo,
+            maximo: maximo,
+            ultimaAtualizacao: new Date().toISOString()
+        };
+
+        // Desabilita o botão durante o salvamento
+        saveMesaConfigBtn.disabled = true;
+        saveMesaConfigBtn.textContent = 'Salvando...';
+
+        configRef.set(configuracao)
+            .then(() => {
+                showSuccessModal(
+                    "Configuração Salva!",
+                    ativo 
+                        ? `Limite de mesas ativado: Mesa ${minimo} a ${maximo}`
+                        : "Limite de mesas desativado. Qualquer número será aceito."
+                );
+                
+                // Atualiza o arquivo app.js com as novas configurações
+                atualizarConfigAppJs(configuracao);
+            })
+            .catch(error => {
+                console.error("Erro ao salvar configuração:", error);
+                showErrorModal(
+                    "Erro ao Salvar",
+                    "Não foi possível salvar a configuração. Tente novamente."
+                );
+            })
+            .finally(() => {
+                // Reabilita o botão
+                saveMesaConfigBtn.disabled = false;
+                saveMesaConfigBtn.textContent = 'Salvar Configuração';
+            });
+    });
+
+    // Função para atualizar as configurações no app.js (via Firebase)
+    function atualizarConfigAppJs(configuracao) {
+        // Salva também em um local que o app.js possa acessar
+        database.ref('configuracoes/app/limiteMesas').set(configuracao)
+            .then(() => {
+                console.log("Configurações sincronizadas com o app.js");
+            })
+            .catch(error => {
+                console.error("Erro ao sincronizar configurações:", error);
+            });
+    }
+
+    // Função para mostrar estatísticas das mesas (opcional)
+    function mostrarEstatisticasMesas() {
+        database.ref('pedidos').once('value', (snapshot) => {
+            const pedidos = snapshot.val();
+            if (pedidos) {
+                const mesasUsadas = new Set();
+                Object.values(pedidos).forEach(pedido => {
+                    if (pedido.numeroMesa) {
+                        mesasUsadas.add(parseInt(pedido.numeroMesa));
+                    }
+                });
+
+                const mesasArray = Array.from(mesasUsadas).sort((a, b) => a - b);
+                const menorMesa = Math.min(...mesasArray);
+                const maiorMesa = Math.max(...mesasArray);
+
+                console.log(`Estatísticas de Mesas:
+                    - Total de mesas diferentes usadas: ${mesasUsadas.size}
+                    - Menor número de mesa usado: ${menorMesa}
+                    - Maior número de mesa usado: ${maiorMesa}
+                    - Mesas usadas: ${mesasArray.join(', ')}`);
+            }
+        });
+    }
+
     // --- CARREGAMENTO INICIAL ---
     loadAndDisplayData();
+    carregarConfiguracoesMesa();
+    
+    // Carrega estatísticas das mesas (opcional, para debug)
+    if (window.location.search.includes('debug=true')) {
+        mostrarEstatisticasMesas();
+    }
 });
