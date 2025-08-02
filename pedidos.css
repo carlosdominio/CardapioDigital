@@ -653,7 +653,7 @@ main {
 
 .item-preco {
     font-weight: 600;
-    color: #007bff;
+    color: #ffffff;
 }
 
 .item-quantidade {
@@ -697,7 +697,7 @@ main {
 }
 
 .item-adicionado .item-preco {
-    color: #c82333;
+    color: #ffffff;
     font-weight: bold;
 }
 .total-pedido {
