@@ -1,0 +1,120 @@
+/* Estilos específicos para o filtro mobile com scroll horizontal */
+
+/* Adiciona propriedades necessárias aos botões */
+.filtro-btn {
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+}
+
+/* Responsividade do filtro - Desktop */
+@media (min-width: 769px) {
+    .filtro-container {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+    }
+}
+
+/* Responsividade do filtro - Mobile com scroll horizontal */
+@media (max-width: 768px) {
+    #filtro-categorias {
+        padding: 15px 0 !important;
+        margin-bottom: 25px !important;
+        position: relative !important;
+    }
+    
+    .filtro-container {
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        gap: 12px !important;
+        padding: 0 20px !important;
+        scroll-behavior: smooth !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none !important; /* Firefox */
+        -ms-overflow-style: none !important; /* IE/Edge */
+    }
+    
+    /* Oculta a scrollbar no WebKit (Chrome, Safari) */
+    .filtro-container::-webkit-scrollbar {
+        display: none !important;
+    }
+    
+    .filtro-btn {
+        padding: 10px 18px !important;
+        font-size: 0.85em !important;
+        min-width: 85px !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        margin: 0 !important;
+    }
+    
+    /* Remove todas as sombras no mobile */
+    .filtro-btn {
+        box-shadow: none !important;
+    }
+    
+    .filtro-btn.active {
+        box-shadow: none !important;
+        transform: none !important;
+    }
+    
+    .filtro-btn.active:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    .filtro-btn:hover {
+        transform: none !important;
+        box-shadow: none !important;
+    }
+    
+    /* Adiciona um gradiente sutil nas bordas para indicar scroll */
+    #filtro-categorias::before,
+    #filtro-categorias::after {
+        content: '' !important;
+        position: absolute !important;
+        top: 0 !important;
+        bottom: 0 !important;
+        width: 20px !important;
+        pointer-events: none !important;
+        z-index: 10 !important;
+    }
+    
+    #filtro-categorias::before {
+        left: 0 !important;
+        background: linear-gradient(to right, #f4f4f4, transparent) !important;
+    }
+    
+    #filtro-categorias::after {
+        right: 0 !important;
+        background: linear-gradient(to left, #f4f4f4, transparent) !important;
+    }
+}
+
+/* Melhorias para telas muito pequenas */
+@media (max-width: 480px) {
+    .filtro-container {
+        padding: 0 15px !important;
+        gap: 10px !important;
+    }
+    
+    .filtro-btn {
+        padding: 8px 16px !important;
+        font-size: 0.8em !important;
+        min-width: 75px !important;
+        box-shadow: none !important;
+    }
+}
+
+/* Melhoria na experiência de scroll - adiciona momentum no iOS */
+@media (max-width: 768px) {
+    .filtro-container {
+        -webkit-overflow-scrolling: touch !important;
+        scroll-snap-type: x proximity !important;
+    }
+    
+    .filtro-btn {
+        scroll-snap-align: start !important;
+    }
+}

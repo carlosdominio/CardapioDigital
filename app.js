@@ -4,7 +4,9 @@ function generateUniqueCode() {
 
 document.addEventListener('DOMContentLoaded', () => {
     const menuContainer = document.getElementById('menu-categorias');
+    const filtroContainer = document.querySelector('.filtro-container');
     let cardapioCompleto = {}; // Armazenará o cardápio vindo do Firebase
+    let categoriaAtiva = 'todas'; // Categoria atualmente selecionada
 
     // --- LÓGICA DO FIREBASE (Leitura de Dados) ---
     firebase.initializeApp(firebaseConfig);
@@ -15,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const menuData = snapshot.val();
         if (menuData) {
             cardapioCompleto = menuData;
+            criarBotoesFiltro(menuData);
             renderizarMenuCompleto(menuData);
         } else {
             menuContainer.innerHTML = "<p>Não há itens no cardápio no momento.</p>";
@@ -24,10 +27,60 @@ document.addEventListener('DOMContentLoaded', () => {
         menuContainer.innerHTML = "<p>Erro ao carregar o cardápio. Tente novamente mais tarde.</p>";
     });
 
+    // Função para criar os botões de filtro baseados nas categorias disponíveis
+    function criarBotoesFiltro(menu) {
+        // Limpa os botões existentes (exceto o "Todas")
+        const botoesExistentes = filtroContainer.querySelectorAll('.filtro-btn:not([data-categoria="todas"])');
+        botoesExistentes.forEach(btn => btn.remove());
+
+        // Cria um botão para cada categoria
+        for (const categoryKey in menu) {
+            const categoria = menu[categoryKey];
+            const botao = document.createElement('button');
+            botao.className = 'filtro-btn';
+            botao.dataset.categoria = categoryKey;
+            botao.textContent = categoria.nome;
+            filtroContainer.appendChild(botao);
+        }
+    }
+
+    // Event listener para os botões de filtro
+    filtroContainer.addEventListener('click', (event) => {
+        if (event.target.classList.contains('filtro-btn')) {
+            const categoriaSelecionada = event.target.dataset.categoria;
+            
+            // Remove a classe active de todos os botões
+            filtroContainer.querySelectorAll('.filtro-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Adiciona a classe active ao botão clicado
+            event.target.classList.add('active');
+            
+            // Atualiza a categoria ativa
+            categoriaAtiva = categoriaSelecionada;
+            
+            // Renderiza o menu filtrado
+            if (categoriaSelecionada === 'todas') {
+                renderizarMenuCompleto(cardapioCompleto);
+            } else {
+                renderizarCategoriaFiltrada(categoriaSelecionada);
+            }
+        }
+    });
+
     function renderizarMenuCompleto(menu) {
         menuContainer.innerHTML = ''; // Limpa o container antes de renderizar
         for (const categoryKey in menu) {
             const categoria = menu[categoryKey];
+            renderizarCategoria(categoria.nome, categoria.itens, categoryKey);
+        }
+    }
+
+    function renderizarCategoriaFiltrada(categoryKey) {
+        menuContainer.innerHTML = ''; // Limpa o container antes de renderizar
+        if (cardapioCompleto[categoryKey]) {
+            const categoria = cardapioCompleto[categoryKey];
             renderizarCategoria(categoria.nome, categoria.itens, categoryKey);
         }
     }

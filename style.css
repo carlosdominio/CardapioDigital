@@ -32,6 +32,68 @@ main {
     padding: 20px;
 }
 
+/* Menu de Filtro por Categorias */
+#filtro-categorias {
+    margin-bottom: 30px;
+    padding: 20px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.filtro-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+.filtro-btn {
+    background-color: #f8f9fa;
+    color: #333;
+    border: 2px solid #dee2e6;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-transform: capitalize;
+    min-width: 80px;
+    text-align: center;
+}
+
+.filtro-btn:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.filtro-btn.active {
+    background-color: #d9534f;
+    color: white;
+    border-color: #d9534f;
+    box-shadow: 0 4px 12px rgba(217, 83, 79, 0.3);
+}
+
+.filtro-btn.active:hover {
+    background-color: #c9302c;
+    border-color: #c9302c;
+}
+
+/* Responsividade do filtro */
+@media (max-width: 768px) {
+    .filtro-container {
+        gap: 8px;
+    }
+    
+    .filtro-btn {
+        padding: 10px 16px;
+        font-size: 0.85em;
+        min-width: 70px;
+    }
+}
+
 /* Seção do Cardápio */
 #menu-categorias {
     flex-basis: 65%;
