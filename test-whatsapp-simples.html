@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste WhatsApp</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #128c7e;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de WhatsApp</h1>
+        <p><strong>Telefone configurado:</strong> <span id="phone-display">Carregando...</span></p>
+        
+        <h3>Testes Disponíveis:</h3>
+        
+        <button onclick="testeAPI()">1. Testar API do Vercel</button>
+        <button onclick="testeLinkManual()">2. Testar Link Manual</button>
+        <button onclick="testePedidoCompleto()">3. Testar Pedido Completo</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script src="whatsapp-config.js"></script>
+    <script>
+        // Exibir telefone configurado
+        document.getElementById('phone-display').textContent = 
+            window.WHATSAPP_RESTAURANT_CONFIG?.phone || 'Não configurado';
+
+        function showResult(message, type = 'info') {
+            const result = document.getElementById('result');
+            result.className = `result ${type}`;
+            result.innerHTML = message;
+        }
+
+        // Teste 1: API do Vercel
+        async function testeAPI() {
+            showResult('🔄 Testando API do Vercel...', 'info');
+            
+            try {
+                const response = await fetch('/api/whatsapp/status');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✅ API funcionando!<br>
+                        <strong>Status:</strong> ${data.connected ? 'Conectado' : 'Desconectado'}<br>
+                        <strong>Plataforma:</strong> ${data.platform}<br>
+                        <strong>Timestamp:</strong> ${data.timestamp}`, 'success');
+                } else {
+                    showResult(`❌ Erro na API: ${data.error}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Erro ao conectar com API: ${error.message}`, 'error');
+            }
+        }
+
+        // Teste 2: Link Manual
+        function testeLinkManual() {
+            const phone = window.WHATSAPP_RESTAURANT_CONFIG?.phone || '5511999999999';
+            const mensagem = '🧪 Teste do Cardápio Digital - Se você recebeu esta mensagem, o WhatsApp está funcionando!';
+            const link = `https://wa.me/${phone}?text=${encodeURIComponent(mensagem)}`;
+            
+            showResult(`🔗 Link gerado com sucesso!<br>
+                <strong>Telefone:</strong> ${phone}<br>
+                <strong>Link:</strong> <a href="${link}" target="_blank">Clique aqui para testar</a><br>
+                <em>O link deve abrir o WhatsApp com a mensagem pré-preenchida.</em>`, 'success');
+            
+            // Abrir automaticamente
+            window.open(link, '_blank');
+        }
+
+        // Teste 3: Pedido Completo
+        async function testePedidoCompleto() {
+            showResult('🔄 Testando envio de pedido completo...', 'info');
+            
+            const pedidoTeste = {
+                cliente: 'Mesa 1 - TESTE WHATSAPP',
+                numeroMesa: '1',
+                mesaCode: 'TEST123',
+                total: 'R$ 35,50',
+                formaPagamento: 'Pix',
+                timestamp: new Date().toISOString(),
+                itens: [
+                    {
+                        nome: 'Hambúrguer Teste',
+                        quantidade: 2,
+                        preco: 15.00
+                    },
+                    {
+                        nome: 'Refrigerante Teste',
+                        quantidade: 1,
+                        preco: 5.50
+                    }
+                ]
+            };
+
+            try {
+                const phone = window.WHATSAPP_RESTAURANT_CONFIG?.phone || '5511999999999';
+                const response = await fetch('/api/whatsapp/send-order', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone: phone,
+                        pedido: pedidoTeste
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showResult(`✅ Pedido enviado com sucesso!<br>
+                        <strong>Telefone:</strong> ${data.data.phone}<br>
+                        <strong>Link WhatsApp:</strong> <a href="${data.data.whatsappWebUrl}" target="_blank">Clique aqui</a><br>
+                        <em>Verifique se a mensagem chegou no WhatsApp.</em>`, 'success');
+                } else {
+                    showResult(`❌ Erro no envio: ${data.error || 'Erro desconhecido'}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Erro na requisição: ${error.message}`, 'error');
+            }
+        }
+
+        // Teste automático ao carregar
+        window.onload = function() {
+            if (!window.WHATSAPP_RESTAURANT_CONFIG) {
+                showResult('❌ Configuração do WhatsApp não encontrada!', 'error');
+            } else if (window.WHATSAPP_RESTAURANT_CONFIG.phone === '5511999999999') {
+                showResult('⚠️ Telefone ainda é o padrão. Configure seu número real!', 'error');
+            } else {
+                showResult('✅ Configuração carregada. Clique nos botões para testar.', 'success');
+            }
+        };
+    </script>
+</body>
+</html>

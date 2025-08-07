@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚂 Railway Evolution API - Teste Redis</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .error-box {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .config-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .input-group {
+            margin-bottom: 15px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .input-group input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover { background: #0056b3; transform: translateY(-1px); }
+        .btn-success { background: #28a745; }
+        .btn-warning { background: #ffc107; color: #000; }
+        .btn-danger { background: #dc3545; }
+        .btn-railway { background: #6f42c1; }
+        
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+        
+        .status-connected { border-color: #28a745; background: #d4edda; }
+        .status-error { border-color: #dc3545; background: #f8d7da; }
+        .status-warning { border-color: #ffc107; background: #fff3cd; }
+        
+        .log-container {
+            background: #000;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+            border: 2px solid #333;
+        }
+        
+        .solutions {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚂 Railway Evolution API - Diagnóstico Redis</h1>
+            <p>Teste e resolução do erro Redis disconnected</p>
+        </div>
+
+        <div class="error-box">
+            <strong>🚨 Erro Detectado:</strong><br>
+            <code>[Evolution API] v2.3.1 159 - Tue Aug 05 2025 19:46:28 ERROR [Redis] [string] redis disconnected</code>
+        </div>
+
+        <div class="config-section">
+            <h3>⚙️ Configuração da Evolution API</h3>
+            <div class="input-group">
+                <label for="evolution-url">URL da Evolution API no Railway:</label>
+                <input type="text" id="evolution-url" placeholder="https://sua-app.railway.app" 
+                       value="https://evolution-api-production-xxxx.up.railway.app">
+            </div>
+            <div class="input-group">
+                <label for="api-key">API Key:</label>
+                <input type="password" id="api-key" placeholder="sua-api-key-aqui">
+            </div>
+            <div class="input-group">
+                <label for="instance-name">Nome da Instância:</label>
+                <input type="text" id="instance-name" placeholder="cardapio" value="cardapio">
+            </div>
+            <button class="btn btn-success" onclick="saveConfig()">💾 Salvar Configuração</button>
+        </div>
+
+        <div class="status-grid">
+            <div class="status-card" id="railway-status">
+                <h4>🚂 Railway Status</h4>
+                <div id="railway-status-text">Não testado</div>
+            </div>
+            <div class="status-card" id="redis-status">
+                <h4>🔴 Redis Status</h4>
+                <div id="redis-status-text">Não testado</div>
+            </div>
+            <div class="status-card" id="instance-status">
+                <h4>📱 Instance Status</h4>
+                <div id="instance-status-text">Não testado</div>
+            </div>
+        </div>
+
+        <div class="quick-actions">
+            <button class="btn" onclick="testRailwayHealth()">🏥 Testar Health</button>
+            <button class="btn" onclick="testInstance()">📱 Testar Instância</button>
+            <button class="btn" onclick="testMessage()">💬 Testar Mensagem</button>
+            <button class="btn btn-warning" onclick="checkRedisStatus()">🔍 Verificar Redis</button>
+            <button class="btn btn-railway" onclick="openRailwayDashboard()">🚂 Railway Dashboard</button>
+            <button class="btn btn-danger" onclick="clearLogs()">🗑️ Limpar Logs</button>
+        </div>
+
+        <div class="log-container" id="log-container">
+            <div>🚂 Railway Evolution API Tester iniciado</div>
+            <div>⚙️ Configure a URL e API Key acima e clique em "Salvar Configuração"</div>
+            <div>🔍 Use os botões para testar diferentes aspectos da API</div>
+        </div>
+
+        <div class="solutions">
+            <h3>🛠️ Soluções para Redis Disconnected:</h3>
+            <div class="quick-actions">
+                <button class="btn btn-railway" onclick="openRailwayDashboard()">
+                    🚂 Redeploy no Railway
+                </button>
+                <button class="btn btn-danger" onclick="window.open('https://redis.com/try-free/', '_blank')">
+                    🔴 Redis Cloud (Gratuito)
+                </button>
+                <button class="btn btn-warning" onclick="window.open('https://upstash.com/', '_blank')">
+                    ⚡ Upstash Redis
+                </button>
+                <button class="btn btn-success" onclick="showTwilioSetup()">
+                    📞 Configurar Twilio
+                </button>
+            </div>
+            
+            <div id="twilio-setup" style="display: none; margin-top: 15px; padding: 15px; background: #fff3cd; border-radius: 6px;">
+                <h4>📞 Configuração Twilio (Alternativa Recomendada):</h4>
+                <p>Configure estas variáveis no Vercel:</p>
+                <pre>TWILIO_ACCOUNT_SID=ACxxxxxxxxxxxxxxxxxxxxx
+TWILIO_AUTH_TOKEN=your_auth_token_here
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886</pre>
+                <button class="btn" onclick="window.open('https://twilio.com/try-twilio', '_blank')">
+                    Criar Conta Twilio
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let config = {
+            evolutionUrl: '',
+            apiKey: '',
+            instanceName: 'cardapio'
+        };
+
+        function log(message, type = 'info') {
+            const container = document.getElementById('log-container');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const colors = {
+                info: '#00ff00',
+                success: '#00ff88',
+                warning: '#ffff00',
+                error: '#ff0000'
+            };
+
+            const div = document.createElement('div');
+            div.style.color = colors[type] || colors.info;
+            div.textContent = `[${timestamp}] ${message}`;
+            
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function saveConfig() {
+            config.evolutionUrl = document.getElementById('evolution-url').value.trim();
+            config.apiKey = document.getElementById('api-key').value.trim();
+            config.instanceName = document.getElementById('instance-name').value.trim() || 'cardapio';
+
+            if (!config.evolutionUrl || !config.apiKey) {
+                log('❌ URL e API Key são obrigatórios!', 'error');
+                return;
+            }
+
+            // Remover barra final se existir
+            config.evolutionUrl = config.evolutionUrl.replace(/\/$/, '');
+
+            log('✅ Configuração salva com sucesso!', 'success');
+            log(`🔗 URL: ${config.evolutionUrl}`, 'info');
+            log(`🔑 API Key: ${config.apiKey.substring(0, 8)}...`, 'info');
+            log(`📱 Instância: ${config.instanceName}`, 'info');
+
+            // Teste automático
+            setTimeout(() => {
+                log('🚀 Iniciando testes automáticos...', 'info');
+                testRailwayHealth();
+            }, 1000);
+        }
+
+        async function testRailwayHealth() {
+            if (!config.evolutionUrl || !config.apiKey) {
+                log('❌ Configure a URL e API Key primeiro!', 'error');
+                return;
+            }
+
+            log('🏥 Testando health endpoint do Railway...', 'info');
+            updateStatus('railway-status', 'testing', 'Testando...');
+
+            try {
+                const response = await fetch(`${config.evolutionUrl}/health`, {
+                    headers: { 'apikey': config.apiKey },
+                    signal: AbortSignal.timeout(15000)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Railway health check OK!', 'success');
+                    log(`📊 Status: ${data.status || 'unknown'}`, 'info');
+                    
+                    updateStatus('railway-status', 'connected', 'Online');
+
+                    if (data.redis) {
+                        if (data.redis === 'connected') {
+                            log('✅ Redis conectado!', 'success');
+                            updateStatus('redis-status', 'connected', 'Conectado');
+                        } else {
+                            log('🔴 Redis desconectado!', 'error');
+                            updateStatus('redis-status', 'error', 'Desconectado');
+                        }
+                    } else {
+                        log('⚠️ Status Redis n��o disponível no health check', 'warning');
+                        updateStatus('redis-status', 'warning', 'Status não disponível');
+                    }
+                } else {
+                    log(`❌ Health check falhou: HTTP ${response.status}`, 'error');
+                    updateStatus('railway-status', 'error', `Erro ${response.status}`);
+                    
+                    if (response.status >= 500) {
+                        log('🔴 Erro 500+ indica problema no servidor (possivelmente Redis)', 'error');
+                        updateStatus('redis-status', 'error', 'Provável problema Redis');
+                    }
+                }
+            } catch (error) {
+                log(`❌ Erro na conexão com Railway: ${error.message}`, 'error');
+                updateStatus('railway-status', 'error', 'Conexão falhou');
+                
+                if (error.name === 'AbortError') {
+                    log('⏰ Timeout - Railway pode estar sobrecarregado', 'warning');
+                }
+            }
+        }
+
+        async function testInstance() {
+            if (!config.evolutionUrl || !config.apiKey) {
+                log('❌ Configure a URL e API Key primeiro!', 'error');
+                return;
+            }
+
+            log('📱 Testando instância WhatsApp...', 'info');
+            updateStatus('instance-status', 'testing', 'Testando...');
+
+            try {
+                const response = await fetch(`${config.evolutionUrl}/instance/${config.instanceName}`, {
+                    headers: { 'apikey': config.apiKey },
+                    signal: AbortSignal.timeout(15000)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    log('✅ Instância encontrada!', 'success');
+                    
+                    const state = data.instance?.state || 'unknown';
+                    const status = data.instance?.status || 'unknown';
+                    
+                    log(`📱 Estado da instância: ${state}`, 'info');
+                    log(`📞 Status WhatsApp: ${status}`, 'info');
+                    
+                    if (state === 'open' && status === 'connected') {
+                        updateStatus('instance-status', 'connected', 'Conectado');
+                        log('🎉 WhatsApp totalmente funcional!', 'success');
+                    } else {
+                        updateStatus('instance-status', 'warning', `${state}/${status}`);
+                        log('⚠️ WhatsApp pode precisar de reconexão', 'warning');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    log(`❌ Erro na instância: HTTP ${response.status}`, 'error');
+                    log(`📄 Resposta: ${errorText.substring(0, 200)}`, 'error');
+                    
+                    updateStatus('instance-status', 'error', `Erro ${response.status}`);
+                    
+                    if (errorText.toLowerCase().includes('redis') || response.status >= 500) {
+                        log('🔴 CONFIRMADO: Problema Redis detectado!', 'error');
+                        updateStatus('redis-status', 'error', 'Redis Error Confirmado');
+                    }
+                }
+            } catch (error) {
+                log(`❌ Erro ao testar instância: ${error.message}`, 'error');
+                updateStatus('instance-status', 'error', 'Falha na conexão');
+            }
+        }
+
+        async function testMessage() {
+            if (!config.evolutionUrl || !config.apiKey) {
+                log('❌ Configure a URL e API Key primeiro!', 'error');
+                return;
+            }
+
+            log('💬 Testando envio de mensagem...', 'info');
+
+            const testPayload = {
+                number: '5511999999999',
+                text: `🧪 Teste Railway Redis - ${new Date().toLocaleString()}`
+            };
+
+            try {
+                const response = await fetch(`${config.evolutionUrl}/message/sendText/${config.instanceName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': config.apiKey
+                    },
+                    body: JSON.stringify(testPayload),
+                    signal: AbortSignal.timeout(20000)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.key) {
+                    log('✅ Mensagem enviada com sucesso!', 'success');
+                    log(`📨 Message ID: ${data.key.id}`, 'info');
+                    log('🎉 Redis está funcionando para envio de mensagens!', 'success');
+                    updateStatus('redis-status', 'connected', 'Funcionando');
+                } else {
+                    log(`❌ Falha no envio: ${data.message || 'Erro desconhecido'}`, 'error');
+                    
+                    if (data.message?.toLowerCase().includes('redis')) {
+                        log('🔴 ERRO REDIS CONFIRMADO no envio de mensagem!', 'error');
+                        updateStatus('redis-status', 'error', 'Redis Error');
+                    }
+                }
+            } catch (error) {
+                log(`❌ Erro no teste de mensagem: ${error.message}`, 'error');
+                
+                if (error.name === 'AbortError') {
+                    log('⏰ Timeout no envio - possível problema Redis', 'warning');
+                }
+            }
+        }
+
+        async function checkRedisStatus() {
+            log('🔍 Verificação específica do Redis...', 'info');
+            
+            // Tentar múltiplos endpoints para detectar Redis
+            const endpoints = [
+                '/health',
+                `/instance/${config.instanceName}`,
+                '/instance/list'
+            ];
+
+            for (const endpoint of endpoints) {
+                try {
+                    log(`🔍 Testando endpoint: ${endpoint}`, 'info');
+                    
+                    const response = await fetch(`${config.evolutionUrl}${endpoint}`, {
+                        headers: { 'apikey': config.apiKey },
+                        signal: AbortSignal.timeout(10000)
+                    });
+
+                    if (!response.ok) {
+                        const errorText = await response.text();
+                        
+                        if (errorText.toLowerCase().includes('redis') || 
+                            errorText.toLowerCase().includes('disconnected') ||
+                            response.status >= 500) {
+                            
+                            log(`🔴 Redis issue detectado em ${endpoint}!`, 'error');
+                            updateStatus('redis-status', 'error', 'Disconnected');
+                            return;
+                        }
+                    } else {
+                        log(`✅ Endpoint ${endpoint} OK`, 'success');
+                    }
+                } catch (error) {
+                    log(`⚠️ Erro em ${endpoint}: ${error.message}`, 'warning');
+                }
+            }
+
+            log('🤔 Verificação Redis concluída - verifique os logs acima', 'info');
+        }
+
+        function updateStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            const textElement = document.getElementById(elementId + '-text');
+            
+            // Remover classes anteriores
+            element.classList.remove('status-connected', 'status-error', 'status-warning');
+            
+            // Adicionar nova classe
+            switch (status) {
+                case 'connected':
+                    element.classList.add('status-connected');
+                    break;
+                case 'error':
+                    element.classList.add('status-error');
+                    break;
+                case 'warning':
+                case 'testing':
+                    element.classList.add('status-warning');
+                    break;
+            }
+            
+            textElement.textContent = text;
+        }
+
+        function openRailwayDashboard() {
+            log('🚂 Abrindo Railway Dashboard...', 'info');
+            window.open('https://railway.app/dashboard', '_blank');
+        }
+
+        function showTwilioSetup() {
+            const setupDiv = document.getElementById('twilio-setup');
+            setupDiv.style.display = setupDiv.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function clearLogs() {
+            document.getElementById('log-container').innerHTML = '<div>🗑️ Logs limpos - Pronto para novos testes</div>';
+        }
+
+        // Inicialização
+        window.onload = function() {
+            log('🚀 Railway Evolution API Tester carregado', 'success');
+            log('📋 Preencha a configuração acima e clique em "Salvar Configuração"', 'info');
+            log('💡 Dica: Sua URL Railway geralmente termina com ".up.railway.app"', 'info');
+        };
+    </script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Teste Baileys WhatsApp Bot</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover { background: #128c7e; }
+        .btn-secondary { background: #007bff; }
+        .btn-warning { background: #ffc107; color: #000; }
+        .btn-danger { background: #dc3545; }
+        
+        .status-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .status-connected { border-left: 4px solid #28a745; }
+        .status-disconnected { border-left: 4px solid #dc3545; }
+        .status-waiting { border-left: 4px solid #ffc107; }
+        
+        .log-area {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        
+        .qr-container {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .qr-image {
+            max-width: 256px;
+            border: 2px solid #25d366;
+            border-radius: 8px;
+        }
+        
+        h1 { color: #333; }
+        h2 { color: #25d366; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Teste Baileys WhatsApp Bot</h1>
+        
+        <div class="status-card" id="status-card">
+            <h3>📊 Status do Bot</h3>
+            <div id="status-content">
+                <p>Clique em "Verificar Status" para começar</p>
+            </div>
+        </div>
+
+        <div>
+            <button class="btn" onclick="checkStatus()">📊 Verificar Status</button>
+            <button class="btn btn-secondary" onclick="showQRCode()">📱 Mostrar QR Code</button>
+            <button class="btn btn-warning" onclick="testSendMessage()">📤 Testar Envio</button>
+            <button class="btn" onclick="connectBot()">🔗 Conectar Bot</button>
+            <button class="btn btn-danger" onclick="clearLogs()">🗑️ Limpar Logs</button>
+        </div>
+
+        <div id="qr-container" class="qr-container" style="display: none;">
+            <h3>📱 QR Code para Conectar</h3>
+            <div id="qr-content">Carregando QR Code...</div>
+        </div>
+
+        <div class="log-area" id="log-area">
+            🤖 Teste Baileys Bot iniciado<br>
+            💡 Clique nos botões acima para testar<br>
+        </div>
+
+        <div class="status-card">
+            <h3>📋 Como Usar</h3>
+            <ol>
+                <li><strong>Verificar Status:</strong> Veja se o bot está conectado</li>
+                <li><strong>Mostrar QR Code:</strong> Se não conectado, veja o QR</li>
+                <li><strong>Conectar Bot:</strong> Simule a conexão para teste</li>
+                <li><strong>Testar Envio:</strong> Envie uma mensagem de teste</li>
+            </ol>
+            
+            <div style="background: #fff3cd; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                <strong>⚠️ Modo Demonstração:</strong><br>
+                Este é um sistema de demonstração. Para usar o Baileys real, é necessário configurar as dependências no servidor.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const container = document.getElementById('log-area');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const colors = {
+                info: '#00ff00',
+                success: '#00ff88',
+                warning: '#ffff00',
+                error: '#ff0000'
+            };
+
+            const div = document.createElement('div');
+            div.style.color = colors[type] || colors.info;
+            div.textContent = `[${timestamp}] ${message}`;
+            
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function checkStatus() {
+            log('🔍 Verificando status do bot...', 'info');
+            
+            try {
+                const response = await fetch('/api/whatsapp/status');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                log('📊 Status recebido da API', 'success');
+                updateStatusCard(data);
+                
+                if (data.connected) {
+                    log('✅ Bot está conectado e funcionando!', 'success');
+                } else if (data.needsQR) {
+                    log('📱 Bot precisa de QR Code para conectar', 'warning');
+                } else {
+                    log('🔄 Bot está inicializando...', 'info');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao verificar status: ${error.message}`, 'error');
+                updateStatusCard({ connected: false, error: error.message });
+            }
+        }
+
+        async function showQRCode() {
+            log('📱 Obtendo QR Code...', 'info');
+            
+            try {
+                const response = await fetch('/api/whatsapp/qr-code');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.qrImage) {
+                    log('✅ QR Code obtido com sucesso', 'success');
+                    displayQRCode(data.qrImage);
+                } else {
+                    log(`❌ ${data.error || 'QR Code não disponível'}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao obter QR Code: ${error.message}`, 'error');
+            }
+        }
+
+        async function connectBot() {
+            log('🔗 Conectando bot...', 'info');
+            
+            try {
+                const response = await fetch('/api/whatsapp/connect', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    log('✅ Bot conectado com sucesso!', 'success');
+                    setTimeout(checkStatus, 1000); // Atualizar status
+                } else {
+                    log(`❌ Erro ao conectar: ${data.error}`, 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro na conexão: ${error.message}`, 'error');
+            }
+        }
+
+        async function testSendMessage() {
+            log('📤 Testando envio de mensagem...', 'info');
+            
+            const pedidoTeste = {
+                cliente: 'Teste Bot Baileys',
+                numeroMesa: '99',
+                mesaCode: 'TEST123',
+                itens: [
+                    { nome: 'Teste Item', quantidade: 1, preco: 10.00 }
+                ],
+                total: 'R$ 10,00',
+                formaPagamento: 'Teste',
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                const response = await fetch('/api/whatsapp/send-order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: '5582994247688', // Número do restaurante
+                        pedido: pedidoTeste
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    log('🎉 Mensagem enviada com sucesso!', 'success');
+                    log(`📨 ID da mensagem: ${result.data.messageId}`, 'info');
+                } else {
+                    log(`❌ Falha no envio: ${result.error}`, 'error');
+                    
+                    if (result.needsQR) {
+                        log('📱 Bot precisa ser conectado primeiro', 'warning');
+                    }
+                }
+                
+            } catch (error) {
+                log(`❌ Erro no teste: ${error.message}`, 'error');
+            }
+        }
+
+        function updateStatusCard(data) {
+            const card = document.getElementById('status-card');
+            const content = document.getElementById('status-content');
+            
+            // Remover classes anteriores
+            card.classList.remove('status-connected', 'status-disconnected', 'status-waiting');
+            
+            if (data.connected) {
+                card.classList.add('status-connected');
+                content.innerHTML = `
+                    <h4>✅ Bot Conectado</h4>
+                    <p><strong>Status:</strong> Funcionando</p>
+                    <p><strong>Provider:</strong> ${data.provider || 'Baileys'}</p>
+                    <p><strong>Última verificação:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+                `;
+            } else if (data.needsQR) {
+                card.classList.add('status-waiting');
+                content.innerHTML = `
+                    <h4>📱 Aguardando QR Code</h4>
+                    <p><strong>Status:</strong> Desconectado</p>
+                    <p><strong>Ação:</strong> Clique em "Mostrar QR Code" ou "Conectar Bot"</p>
+                    <p><strong>Mensagem:</strong> ${data.message}</p>
+                `;
+            } else {
+                card.classList.add('status-disconnected');
+                content.innerHTML = `
+                    <h4>❌ Bot Desconectado</h4>
+                    <p><strong>Status:</strong> ${data.error ? 'Erro' : 'Inicializando'}</p>
+                    <p><strong>Mensagem:</strong> ${data.message || data.error}</p>
+                `;
+            }
+        }
+
+        function displayQRCode(qrImage) {
+            const container = document.getElementById('qr-container');
+            const content = document.getElementById('qr-content');
+            
+            content.innerHTML = `
+                <img src="${qrImage}" alt="QR Code WhatsApp" class="qr-image">
+                <p><strong>Escaneie com seu WhatsApp:</strong></p>
+                <ol style="text-align: left; display: inline-block;">
+                    <li>Abra o WhatsApp no celular</li>
+                    <li>Toque nos três pontos (⋮)</li>
+                    <li>Dispositivos conectados</li>
+                    <li>Conectar um dispositivo</li>
+                    <li>Aponte a câmera para o QR Code</li>
+                </ol>
+                <p style="margin-top: 15px;">
+                    <button class="btn" onclick="connectBot()">🔗 Simular Conexão</button>
+                </p>
+            `;
+            
+            container.style.display = 'block';
+        }
+
+        function clearLogs() {
+            document.getElementById('log-area').innerHTML = '🗑️ Logs limpos - Pronto para novos testes<br>';
+        }
+
+        // Auto-inicializar
+        window.onload = function() {
+            log('🚀 Teste Baileys Bot carregado!', 'success');
+            log('💡 Clique em "Verificar Status" para começar', 'info');
+            
+            // Verificar status automaticamente
+            setTimeout(checkStatus, 1000);
+        };
+    </script>
+</body>
+</html>

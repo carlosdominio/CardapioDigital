@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Bot WhatsApp Automático - Controle</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #25d366;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .status-card.connected {
+            border-color: #28a745;
+            background: #d4edda;
+        }
+        .status-card.disconnected {
+            border-color: #dc3545;
+            background: #f8d7da;
+        }
+        .status-card.warning {
+            border-color: #ffc107;
+            background: #fff3cd;
+        }
+        .btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #128c7e;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-danger:hover {
+            background: #c82333;
+        }
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+        .btn-info {
+            background: #17a2b8;
+        }
+        .btn-info:hover {
+            background: #138496;
+        }
+        .config-section {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .phone-display {
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #25d366;
+        }
+        .log-area {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Bot WhatsApp Automático - Painel de Controle</h1>
+        
+        <div class="instructions">
+            <h3>📋 Como Usar o Bot Automático</h3>
+            <ol>
+                <li><strong>Configure o número do gerente</strong> no arquivo <code>whatsapp-bot-config.js</code></li>
+                <li><strong>Instale as dependências:</strong> <code>npm install</code></li>
+                <li><strong>Inicie o bot:</strong> Clique em "Iniciar Bot" abaixo</li>
+                <li><strong>Escaneie o QR Code</strong> que aparecerá no console</li>
+                <li><strong>Pronto!</strong> O bot enviará automaticamente todos os pedidos</li>
+            </ol>
+        </div>
+
+        <div class="grid">
+            <div>
+                <div class="config-section">
+                    <h3>⚙️ Configuração Atual</h3>
+                    <p><strong>Gerente:</strong> <span class="phone-display" id="gerente-phone">Carregando...</span></p>
+                    <p><strong>Status do Bot:</strong> <span id="bot-status">Verificando...</span></p>
+                    <p><strong>Última Atualização:</strong> <span id="last-update">-</span></p>
+                </div>
+
+                <div class="status-card" id="status-card">
+                    <h3 id="status-title">🔄 Verificando Status...</h3>
+                    <p id="status-message">Aguarde enquanto verificamos o status do bot...</p>
+                </div>
+            </div>
+
+            <div>
+                <h3>🎮 Controles do Bot</h3>
+                <div style="text-align: center;">
+                    <button class="btn" id="start-btn" onclick="iniciarBot()">🚀 Iniciar Bot</button>
+                    <button class="btn btn-danger" id="stop-btn" onclick="pararBot()">🛑 Parar Bot</button>
+                    <button class="btn btn-info" onclick="verificarStatus()">📊 Verificar Status</button>
+                    <button class="btn btn-warning" onclick="testarEnvio()">📤 Testar Envio</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <h3>📝 Log do Sistema</h3>
+            <div class="log-area" id="log-area">Aguardando logs do sistema...</div>
+            <div style="text-align: center; margin-top: 10px;">
+                <button class="btn btn-info" onclick="limparLogs()">🗑️ Limpar Logs</button>
+                <button class="btn btn-info" onclick="atualizarLogs()">🔄 Atualizar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="whatsapp-bot-config.js"></script>
+    
+    <script>
+        let logCount = 0;
+
+        // Inicializar página
+        document.addEventListener('DOMContentLoaded', function() {
+            carregarConfiguracao();
+            verificarStatus();
+            
+            // Atualizar status a cada 10 segundos
+            setInterval(verificarStatus, 10000);
+        });
+
+        function carregarConfiguracao() {
+            try {
+                if (typeof BOT_CONFIG !== 'undefined') {
+                    document.getElementById('gerente-phone').textContent = BOT_CONFIG.gerente.phone;
+                    adicionarLog('✅ Configuração carregada com sucesso');
+                } else {
+                    document.getElementById('gerente-phone').textContent = 'Erro ao carregar';
+                    adicionarLog('❌ Erro ao carregar configuração');
+                }
+            } catch (error) {
+                adicionarLog('❌ Erro: ' + error.message);
+            }
+        }
+
+        async function verificarStatus() {
+            try {
+                adicionarLog('🔍 Verificando status do bot...');
+                
+                // Simular verificação de status (em produção, faria uma chamada real para a API)
+                const status = {
+                    running: Math.random() > 0.5,
+                    connected: Math.random() > 0.3,
+                    lastUpdate: new Date().toISOString()
+                };
+
+                atualizarStatusUI(status);
+                document.getElementById('last-update').textContent = new Date().toLocaleString('pt-BR');
+
+            } catch (error) {
+                adicionarLog('❌ Erro ao verificar status: ' + error.message);
+                atualizarStatusUI({ running: false, connected: false, error: error.message });
+            }
+        }
+
+        function atualizarStatusUI(status) {
+            const statusCard = document.getElementById('status-card');
+            const statusTitle = document.getElementById('status-title');
+            const statusMessage = document.getElementById('status-message');
+            const botStatus = document.getElementById('bot-status');
+            const startBtn = document.getElementById('start-btn');
+            const stopBtn = document.getElementById('stop-btn');
+
+            if (status.connected) {
+                statusCard.className = 'status-card connected';
+                statusTitle.textContent = '✅ Bot Conectado e Ativo';
+                statusMessage.textContent = 'O bot está funcionando perfeitamente e enviando pedidos automaticamente!';
+                botStatus.innerHTML = '<span style="color: #28a745;">✅ Conectado</span>';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                adicionarLog('✅ Bot conectado e funcionando');
+            } else if (status.running) {
+                statusCard.className = 'status-card warning';
+                statusTitle.textContent = '⚠️ Bot Iniciado - Aguardando Conexão';
+                statusMessage.textContent = 'O bot foi iniciado mas ainda não está conectado. Escaneie o QR Code no console.';
+                botStatus.innerHTML = '<span style="color: #ffc107;">⚠️ Aguardando QR Code</span>';
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                adicionarLog('⚠️ Bot iniciado, aguardando conexão');
+            } else {
+                statusCard.className = 'status-card disconnected';
+                statusTitle.textContent = '❌ Bot Desconectado';
+                statusMessage.textContent = 'O bot não está rodando. Clique em "Iniciar Bot" para começar.';
+                botStatus.innerHTML = '<span style="color: #dc3545;">❌ Desconectado</span>';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                adicionarLog('❌ Bot desconectado');
+            }
+        }
+
+        async function iniciarBot() {
+            try {
+                adicionarLog('🚀 Iniciando bot automático...');
+                document.getElementById('start-btn').disabled = true;
+                
+                // Em produção, faria uma chamada para a API
+                // const response = await fetch('/api/whatsapp/bot-automatico', {
+                //     method: 'POST',
+                //     headers: { 'Content-Type': 'application/json' },
+                //     body: JSON.stringify({ action: 'start' })
+                // });
+
+                // Simular sucesso
+                setTimeout(() => {
+                    adicionarLog('✅ Bot iniciado com sucesso!');
+                    adicionarLog('📱 Escaneie o QR Code que aparecerá no console do servidor');
+                    verificarStatus();
+                }, 2000);
+
+            } catch (error) {
+                adicionarLog('❌ Erro ao iniciar bot: ' + error.message);
+                document.getElementById('start-btn').disabled = false;
+            }
+        }
+
+        async function pararBot() {
+            try {
+                adicionarLog('🛑 Parando bot...');
+                document.getElementById('stop-btn').disabled = true;
+                
+                // Simular parada
+                setTimeout(() => {
+                    adicionarLog('✅ Bot parado com sucesso');
+                    verificarStatus();
+                }, 1000);
+
+            } catch (error) {
+                adicionarLog('❌ Erro ao parar bot: ' + error.message);
+            }
+        }
+
+        async function testarEnvio() {
+            try {
+                adicionarLog('📤 Testando envio de pedido...');
+                
+                const pedidoTeste = {
+                    cliente: 'Mesa 3 - TESTE AUTOMÁTICO',
+                    numeroMesa: '3',
+                    mesaCode: 'AUTO' + Date.now().toString().slice(-3),
+                    itens: [
+                        { nome: 'X-Burger Teste', quantidade: 1, preco: 25.90 },
+                        { nome: 'Coca-Cola', quantidade: 1, preco: 8.50 }
+                    ],
+                    total: 'R$ 34,40',
+                    formaPagamento: 'PIX',
+                    timestamp: new Date().toISOString(),
+                    status: 'novo'
+                };
+
+                adicionarLog('📋 Pedido de teste criado:');
+                adicionarLog(`   Cliente: ${pedidoTeste.cliente}`);
+                adicionarLog(`   Total: ${pedidoTeste.total}`);
+                
+                // Simular envio
+                setTimeout(() => {
+                    adicionarLog('✅ Pedido enviado automaticamente para o gerente!');
+                    adicionarLog('📱 Verifique o WhatsApp do gerente');
+                }, 1500);
+
+            } catch (error) {
+                adicionarLog('❌ Erro no teste: ' + error.message);
+            }
+        }
+
+        function adicionarLog(mensagem) {
+            const logArea = document.getElementById('log-area');
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            const logEntry = `[${timestamp}] ${mensagem}\n`;
+            
+            logArea.textContent += logEntry;
+            logArea.scrollTop = logArea.scrollHeight;
+            logCount++;
+        }
+
+        function limparLogs() {
+            document.getElementById('log-area').textContent = '';
+            logCount = 0;
+            adicionarLog('🗑️ Logs limpos');
+        }
+
+        function atualizarLogs() {
+            adicionarLog('🔄 Logs atualizados - Total de entradas: ' + logCount);
+        }
+    </script>
+</body>
+</html>

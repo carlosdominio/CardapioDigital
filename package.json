@@ -13,12 +13,20 @@
     "dev": "node simple-server.js"
   },
   "dependencies": {
+    "@hapi/boom": "^10.0.1",
+    "@whiskeysockets/baileys": "^6.7.18",
+    "pino": "^9.7.0",
     "venom-bot": "^5.3.0"
   },
   "engines": {
     "node": ">=16.0.0"
   },
-  "keywords": ["cardapio", "whatsapp", "restaurante", "pedidos"],
+  "keywords": [
+    "cardapio",
+    "whatsapp",
+    "restaurante",
+    "pedidos"
+  ],
   "author": "Seu Nome",
   "license": "MIT"
 }

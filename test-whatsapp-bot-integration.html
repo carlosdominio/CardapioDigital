@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 Teste Bot WhatsApp Automático</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #25d366;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #25d366;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #128c7e;
+        }
+        .btn-secondary {
+            background: #007bff;
+        }
+        .btn-secondary:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+        .result.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result.info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .integration-flow {
+            background: #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .step-number {
+            background: #007bff;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Teste Bot WhatsApp Automático</h1>
+        
+        <div class="status-section">
+            <h3>📊 Status do Sistema</h3>
+            <div id="status-display">
+                <p><strong>Bot Status:</strong> <span id="bot-status">Verificando...</span></p>
+                <p><strong>Bridge Status:</strong> <span id="bridge-status">Verificando...</span></p>
+                <p><strong>WhatsApp Web:</strong> <span id="web-status">Disponível</span></p>
+            </div>
+        </div>
+
+        <div class="integration-flow">
+            <h3>🔄 Fluxo de Integração</h3>
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>Cliente faz pedido → Sistema captura dados</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>Tenta Bot Automático (Baileys) → Envio instantâneo</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>Fallback WhatsApp Web → Abre link wa.me</div>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <div>Fallback Servidor HTTP → whatsapp-server.js</div>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="btn" onclick="verificarStatus()">🔍 Verificar Status</button>
+            <button class="btn" onclick="testarBotAutomatico()">🤖 Testar Bot Automático</button>
+            <button class="btn btn-secondary" onclick="testarWhatsAppWeb()">🌐 Testar WhatsApp Web</button>
+            <button class="btn btn-secondary" onclick="testarIntegracaoCompleta()">🚀 Teste Completo</button>
+        </div>
+
+        <div id="result" class="result"></div>
+
+        <div class="status-section" style="margin-top: 30px;">
+            <h3>📋 Instruções de Uso</h3>
+            <ol>
+                <li><strong>Configurar:</strong> Execute <code>node setup-whatsapp-bot.js</code></li>
+                <li><strong>Iniciar Bot:</strong> Execute <code>node whatsapp-bot-automatico.js</code></li>
+                <li><strong>Escanear QR:</strong> Use o WhatsApp do restaurante</li>
+                <li><strong>Testar:</strong> Use os botões acima para verificar</li>
+                <li><strong>Produção:</strong> Mantenha o bot sempre rodando</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Scripts necessários -->
+    <script src="whatsapp-config.js"></script>
+    <script src="whatsapp-bot-bridge.js"></script>
+    <script src="whatsapp-integration.js"></script>
+
+    <script>
+        // Aguardar carregamento completo
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(verificarStatus, 1000);
+        });
+
+        async function verificarStatus() {
+            showResult('🔍 Verificando status do sistema...', 'info');
+            
+            try {
+                // Verificar Bot Automático
+                let botStatus = 'Desconectado';
+                try {
+                    if (typeof window.whatsappBotStatus === 'function') {
+                        const status = await window.whatsappBotStatus();
+                        botStatus = status.connected ? '✅ Conectado' : '❌ Desconectado';
+                    } else {
+                        botStatus = '⚠️ Bridge não carregado';
+                    }
+                } catch (error) {
+                    botStatus = '❌ Erro de conexão';
+                }
+                
+                document.getElementById('bot-status').innerHTML = botStatus;
+                
+                // Verificar Bridge
+                const bridgeStatus = typeof window.enviarPedidoAutomatico === 'function' ? '✅ Carregado' : '❌ Não carregado';
+                document.getElementById('bridge-status').innerHTML = bridgeStatus;
+                
+                // Verificar WhatsApp Web
+                const webStatus = typeof window.whatsappIntegration !== 'undefined' ? '✅ Disponível' : '❌ Não disponível';
+                document.getElementById('web-status').innerHTML = webStatus;
+                
+                showResult('✅ Verificação de status concluída!', 'success');
+                
+            } catch (error) {
+                console.error('Erro na verificação:', error);
+                showResult('❌ Erro na verificação: ' + error.message, 'error');
+            }
+        }
+
+        async function testarBotAutomatico() {
+            try {
+                showResult('🤖 Testando Bot Automático...', 'info');
+                
+                if (typeof window.enviarPedidoAutomatico !== 'function') {
+                    throw new Error('Bridge do bot não está carregado');
+                }
+
+                const pedidoTeste = {
+                    cliente: 'Mesa 1 - TESTE BOT AUTOMÁTICO',
+                    numeroMesa: '1',
+                    mesaCode: 'BOT' + Date.now().toString().slice(-3),
+                    itens: [
+                        { nome: 'Teste Bot Automático', quantidade: 1, preco: 15.90 }
+                    ],
+                    total: 'R$ 15,90',
+                    formaPagamento: 'Teste',
+                    timestamp: new Date().toISOString()
+                };
+
+                console.log('📋 Pedido de teste para bot:', pedidoTeste);
+
+                const resultado = await window.enviarPedidoAutomatico(pedidoTeste);
+                
+                if (resultado && resultado.success) {
+                    showResult(`✅ Bot Automático funcionando!\n\nResposta: ${resultado.message}`, 'success');
+                } else {
+                    showResult(`⚠️ Bot não disponível ou erro: ${resultado?.message || 'Resposta inválida'}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('Erro no teste do bot:', error);
+                showResult('❌ Erro no teste do bot: ' + error.message, 'error');
+            }
+        }
+
+        async function testarWhatsAppWeb() {
+            try {
+                showResult('🌐 Testando WhatsApp Web...', 'info');
+                
+                if (typeof window.whatsappIntegration === 'undefined') {
+                    throw new Error('WhatsApp Integration não carregado');
+                }
+
+                const pedidoTeste = {
+                    cliente: 'Mesa 2 - TESTE WHATSAPP WEB',
+                    numeroMesa: '2',
+                    mesaCode: 'WEB' + Date.now().toString().slice(-3),
+                    itens: [
+                        { nome: 'Teste WhatsApp Web', quantidade: 1, preco: 12.50 }
+                    ],
+                    total: 'R$ 12,50',
+                    formaPagamento: 'Teste',
+                    timestamp: new Date().toISOString()
+                };
+
+                const resultado = await window.whatsappIntegration.enviarPedido(pedidoTeste);
+                
+                if (resultado.success) {
+                    showResult(`✅ WhatsApp Web funcionando!\n\nLink: ${resultado.data.whatsappLink}`, 'success');
+                } else {
+                    showResult(`❌ Erro no WhatsApp Web: ${resultado.message}`, 'error');
+                }
+
+            } catch (error) {
+                console.error('Erro no teste WhatsApp Web:', error);
+                showResult('❌ Erro no teste WhatsApp Web: ' + error.message, 'error');
+            }
+        }
+
+        async function testarIntegracaoCompleta() {
+            try {
+                showResult('🚀 Testando integração completa...', 'info');
+                
+                if (typeof window.enviarPedidoWhatsApp !== 'function') {
+                    throw new Error('Função enviarPedidoWhatsApp não encontrada');
+                }
+
+                const pedidoTeste = {
+                    cliente: 'Mesa 3 - TESTE INTEGRAÇÃO COMPLETA',
+                    numeroMesa: '3',
+                    mesaCode: 'INT' + Date.now().toString().slice(-3),
+                    itens: [
+                        { nome: 'Hambúrguer Teste', quantidade: 2, preco: 25.90 },
+                        { nome: 'Refrigerante Teste', quantidade: 1, preco: 8.50 }
+                    ],
+                    total: 'R$ 60,30',
+                    formaPagamento: 'Pix',
+                    timestamp: new Date().toISOString()
+                };
+
+                console.log('📋 Pedido de teste completo:', pedidoTeste);
+
+                const resultado = await window.enviarPedidoWhatsApp(pedidoTeste);
+                
+                if (resultado) {
+                    showResult('✅ Integração completa funcionando!\n\nO sistema tentou:\n1. Bot Automático (se disponível)\n2. WhatsApp Web (fallback)\n3. Servidor HTTP (fallback final)', 'success');
+                } else {
+                    showResult('⚠️ Integração executada mas com problemas. Verifique o console para detalhes.', 'error');
+                }
+
+            } catch (error) {
+                console.error('Erro no teste completo:', error);
+                showResult('❌ Erro no teste completo: ' + error.message, 'error');
+            }
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.className = `result ${type}`;
+            resultDiv.style.display = 'block';
+            
+            // Auto-hide após 15 segundos
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 15000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Teste Twilio - Diagnóstico</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .btn:hover { background: #0056b3; }
+        .btn-success { background: #28a745; }
+        .btn-warning { background: #ffc107; color: #000; }
+        .btn-danger { background: #dc3545; }
+        
+        .log-area {
+            background: #000;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+        .status-success { border-left: 4px solid #28a745; }
+        .status-error { border-left: 4px solid #dc3545; }
+        .status-warning { border-left: 4px solid #ffc107; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Diagnóstico Twilio</h1>
+        <p>Vamos verificar se o Twilio está configurado corretamente no seu sistema.</p>
+
+        <div class="status-card" id="config-status">
+            <h3>⚙️ Status da Configuração</h3>
+            <div id="config-result">Clique em "Verificar Configuração" para testar</div>
+        </div>
+
+        <div>
+            <button class="btn btn-success" onclick="checkTwilioConfig()">⚙️ Verificar Configuração</button>
+            <button class="btn" onclick="testTwilioStatus()">📊 Testar Status Twilio</button>
+            <button class="btn btn-warning" onclick="testWhatsAppStatus()">📱 Status WhatsApp Geral</button>
+            <button class="btn btn-danger" onclick="clearLogs()">🗑️ Limpar Logs</button>
+        </div>
+
+        <div class="log-area" id="log-area">
+            <div>🧪 Diagnóstico Twilio iniciado</div>
+            <div>📋 Clique nos botões acima para testar</div>
+        </div>
+
+        <div class="status-card status-warning">
+            <h3>🔧 Possíveis Problemas:</h3>
+            <ul>
+                <li><strong>Sandbox não ativado:</strong> Precisa ativar WhatsApp Sandbox no Twilio</li>
+                <li><strong>Número não verificado:</strong> Seu número precisa estar na lista de teste</li>
+                <li><strong>Credenciais erradas:</strong> Account SID ou Auth Token incorretos</li>
+                <li><strong>Deploy não terminou:</strong> Aguarde o Vercel terminar o deploy</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            const container = document.getElementById('log-area');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const colors = {
+                info: '#00ff00',
+                success: '#00ff88',
+                warning: '#ffff00',
+                error: '#ff0000'
+            };
+
+            const div = document.createElement('div');
+            div.style.color = colors[type] || colors.info;
+            div.textContent = `[${timestamp}] ${message}`;
+            
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function checkTwilioConfig() {
+            log('🔍 Verificando configuração Twilio...', 'info');
+            
+            try {
+                const response = await fetch('/api/whatsapp/status');
+                const data = await response.json();
+                
+                log('📊 Status recebido da API', 'success');
+                
+                if (data.providers?.twilio?.configured) {
+                    log('✅ Twilio está configurado!', 'success');
+                    updateConfigStatus('success', 'Twilio Configurado', 'Credenciais encontradas no sistema');
+                    
+                    // Testar conexão
+                    log('🧪 Testando conexão com Twilio...', 'info');
+                    await testTwilioConnection();
+                } else {
+                    log('❌ Twilio NÃO está configurado', 'error');
+                    updateConfigStatus('error', 'Twilio Não Configurado', 'Variáveis de ambiente não encontradas');
+                    
+                    log('💡 Verifique se as variáveis foram salvas no Vercel:', 'warning');
+                    log('   - TWILIO_ACCOUNT_SID', 'warning');
+                    log('   - TWILIO_AUTH_TOKEN', 'warning');
+                    log('   - TWILIO_WHATSAPP_FROM', 'warning');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao verificar configuração: ${error.message}`, 'error');
+                updateConfigStatus('error', 'Erro na Verificação', error.message);
+            }
+        }
+
+        async function testTwilioConnection() {
+            try {
+                // Tentar enviar mensagem de teste via Twilio
+                const testPayload = {
+                    phone: '5582994247688', // Seu número
+                    message: `🧪 Teste Twilio - ${new Date().toLocaleString()}`
+                };
+
+                log('📤 Enviando mensagem de teste...', 'info');
+                
+                const response = await fetch('/api/whatsapp/twilio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testPayload)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    log('✅ Teste Twilio SUCESSO!', 'success');
+                    log(`📨 Message SID: ${result.data?.messageSid || 'N/A'}`, 'info');
+                    updateConfigStatus('success', 'Twilio Funcionando', 'Mensagem de teste enviada com sucesso');
+                } else {
+                    log(`❌ Teste Twilio FALHOU: ${result.error}`, 'error');
+                    updateConfigStatus('error', 'Twilio com Problema', result.error);
+                    
+                    // Analisar erro específico
+                    if (result.error?.includes('21614')) {
+                        log('🔴 ERRO 21614: Número não está no Sandbox', 'error');
+                        log('💡 Solução: Adicione seu número no Twilio Sandbox', 'warning');
+                    } else if (result.error?.includes('20003')) {
+                        log('🔴 ERRO 20003: Credenciais inválidas', 'error');
+                        log('💡 Solução: Verifique Account SID e Auth Token', 'warning');
+                    }
+                }
+
+            } catch (error) {
+                log(`❌ Erro na conexão Twilio: ${error.message}`, 'error');
+                updateConfigStatus('error', 'Erro de Conexão', error.message);
+            }
+        }
+
+        async function testTwilioStatus() {
+            log('📊 Testando status específico do Twilio...', 'info');
+            
+            try {
+                const response = await fetch('/api/whatsapp/status');
+                const data = await response.json();
+                
+                const twilio = data.providers?.twilio;
+                
+                if (twilio) {
+                    log(`📋 Twilio configurado: ${twilio.configured ? 'SIM' : 'NÃO'}`, twilio.configured ? 'success' : 'error');
+                    log(`📋 Twilio status: ${twilio.status || 'unknown'}`, 'info');
+                } else {
+                    log('❌ Dados do Twilio não encontrados na resposta', 'error');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao testar status: ${error.message}`, 'error');
+            }
+        }
+
+        async function testWhatsAppStatus() {
+            log('📱 Verificando status geral do WhatsApp...', 'info');
+            
+            try {
+                const response = await fetch('/api/whatsapp/status');
+                const data = await response.json();
+                
+                log('📊 Status geral:', 'info');
+                log(`   Connected: ${data.connected}`, data.connected ? 'success' : 'warning');
+                log(`   Message: ${data.message}`, 'info');
+                
+                if (data.providers) {
+                    log('📋 Provedores disponíveis:', 'info');
+                    
+                    Object.entries(data.providers).forEach(([name, provider]) => {
+                        const status = provider.configured ? 'configurado' : 'não configurado';
+                        const color = provider.configured ? 'success' : 'warning';
+                        log(`   ${name}: ${status}`, color);
+                    });
+                }
+                
+            } catch (error) {
+                log(`❌ Erro ao verificar status geral: ${error.message}`, 'error');
+            }
+        }
+
+        function updateConfigStatus(type, title, message) {
+            const statusDiv = document.getElementById('config-status');
+            const resultDiv = document.getElementById('config-result');
+            
+            // Remover classes anteriores
+            statusDiv.classList.remove('status-success', 'status-error', 'status-warning');
+            
+            // Adicionar nova classe
+            statusDiv.classList.add(`status-${type}`);
+            
+            resultDiv.innerHTML = `
+                <h4>${title}</h4>
+                <p>${message}</p>
+            `;
+        }
+
+        function clearLogs() {
+            document.getElementById('log-area').innerHTML = '<div>🗑️ Logs limpos - Pronto para novos testes</div>';
+        }
+
+        // Auto-inicializar
+        window.onload = function() {
+            log('🚀 Diagnóstico Twilio carregado', 'success');
+            log('💡 Clique em "Verificar Configuração" para começar', 'info');
+        };
+    </script>
+</body>
+</html>
